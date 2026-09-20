@@ -33,11 +33,13 @@
   <meta name="twitter:description" content="ZiftStudio geliştirici konsolu ve terminal arayüzü.">
   <meta name="twitter:image" content="https://ziftstudio.site/assets/logos/ziftstudio/ziftstudio-logo-1.png">
 
-  <!-- Favicon & Web App Manifest -->
-  <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon/favicon-16x16.png">
-  <link rel="manifest" href="/assets/favicon/site.webmanifest">
+    <!-- Favicon & Web App Manifest -->
+  <link rel="shortcut icon" href="../assets/favicon/favicon.ico">
+  <link rel="icon" type="image/x-icon" href="../assets/favicon/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="../assets/favicon/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="../assets/favicon/apple-touch-icon.png">
+  <link rel="manifest" href="../assets/favicon/site.webmanifest">
 
   <!-- Font Preconnect -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -966,6 +968,13 @@ Startup'lardan kurumsal markalara kadar yüksek performanslı web siteleri, SaaS
       setTimeout(() => {
         window.location.href = url;
       }, 400);
+    }
+
+    function exitToHome() {
+      printLine('Ana sayfaya yönlendiriliyorsunuz...', 'info');
+      setTimeout(() => {
+        window.location.href = '../index.html';
+      }, 300);
     }
 
     // Matrix Rain Effect

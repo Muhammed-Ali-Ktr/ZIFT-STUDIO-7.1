@@ -34,11 +34,13 @@
   <meta name="twitter:description" content="Kuaför, dişçi ve profesyoneller için online randevu yönetim sistemi." />
   <meta name="twitter:image" content="https://ziftstudio.site/assets/image/randevu/randevu-1.png" />
 
-  <!-- Favicon & Web App Manifest -->
-  <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon/favicon-16x16.png">
-  <link rel="manifest" href="/assets/favicon/site.webmanifest">
+    <!-- Favicon & Web App Manifest -->
+  <link rel="shortcut icon" href="../assets/favicon/favicon.ico">
+  <link rel="icon" type="image/x-icon" href="../assets/favicon/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="../assets/favicon/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="../assets/favicon/apple-touch-icon.png">
+  <link rel="manifest" href="../assets/favicon/site.webmanifest">
 
   <!-- Stil Dosyaları -->
   <link rel="stylesheet" href="../CSS/style.css" />
@@ -75,38 +77,39 @@
   <div class="page-wrapper">
     <!-- Navigation -->
     <nav id="navbar">
-      <a href="../index.html" class="logo">
-        <img src="../assets/logos/ziftstudio/ziftstudio-logo-1.png" alt="ZiftStudio Logo" class="logo-mark" />
-        Zift<span>Studio</span>
-      </a>
-      <ul class="nav-links">
-        <li><a href="../index.html#hero">Giriş</a></li>
-        <li><a href="../index.html#pricing">Paketler</a></li>
-        <li><a href="../index.html#about">Hakkımızda</a></li>
-        <li><a href="projeler.html#projects">Projeler</a></li>
-        <li><a href="../index.html#technologies">Teknolojiler</a></li>
-        <li><a href="../index.html#success">Görüşler</a></li>
-        <li><a href="yazı.html">Blog</a></li>
-        <li><a href="../index.html#contact">İletişim</a></li>
-      </ul>
-      <div class="nav-actions">
-        <button class="theme-toggle-nav" id="themeToggle" aria-label="Temayı Değiştir">
-          <span id="themeToggleIcon">🌙</span>
-        </button>
+      <div class="nav-container">
+        <a href="../index.html" class="logo">
+          <img src="../assets/logos/ziftstudio/ziftstudio-logo-1.png" alt="Zift Studio Logo" class="logo-img">
+          Zift <span>Studio</span>
+        </a>
+        <ul class="nav-links">
+          <li><a href="../index.html#hero">Ana Sayfa</a></li>
+          <li><a href="../index.html#services">Hizmetler</a></li>
+          <li><a href="projeler.html">Projeler</a></li>
+          <li><a href="../index.html#technologies">Teknolojiler</a></li>
+          <li><a href="../index.html#founder-about">Hakkımızda</a></li>
+          <li><a href="yazı.html">Blog</a></li>
+          <li><a href="../index.html#contact">İletişim</a></li>
+        </ul>
+        <div class="nav-right-actions">
+          <a href="../index.html#contact" class="nav-cta-btn">Hemen İletişime Geç →</a>
+          <button class="theme-toggle-nav" id="themeToggle" aria-label="Temayı Değiştir">
+            <span id="themeToggleIcon">🌙</span>
+          </button>
+          <button class="hamburger" id="hamburger" aria-label="Menu">
+            <span></span><span></span><span></span>
+          </button>
+        </div>
       </div>
-      <button class="hamburger" id="hamburger" aria-label="Menu">
-        <span></span><span></span><span></span>
-      </button>
     </nav>
 
     <!-- Mobile Nav Overlay -->
     <div class="mobile-nav" id="mobileNav">
-      <a href="../index.html#hero" onclick="closeMobileNav()">Giriş</a>
-      <a href="../index.html#pricing" onclick="closeMobileNav()">Paketler</a>
-      <a href="../index.html#about" onclick="closeMobileNav()">Hakkımızda</a>
-      <a href="projeler.html#projects" onclick="closeMobileNav()">Projeler</a>
+      <a href="../index.html#hero" onclick="closeMobileNav()">Ana Sayfa</a>
+      <a href="../index.html#services" onclick="closeMobileNav()">Hizmetler</a>
+      <a href="projeler.html" onclick="closeMobileNav()">Projeler</a>
       <a href="../index.html#technologies" onclick="closeMobileNav()">Teknolojiler</a>
-      <a href="../index.html#success" onclick="closeMobileNav()">Görüşler</a>
+      <a href="../index.html#founder-about" onclick="closeMobileNav()">Hakkımızda</a>
       <a href="yazı.html" onclick="closeMobileNav()">Blog</a>
       <a href="../index.html#contact" onclick="closeMobileNav()">İletişim</a>
     </div>
@@ -139,7 +142,7 @@
 
       <!-- Tab Switcher Navigation -->
       <div class="qr-tab-nav">
-        <button class="qr-tab-btn" data-tab="admin-panel" onclick="switchQrTab('admin-panel')">
+        <button class="qr-tab-btn active" data-tab="admin-panel" onclick="switchQrTab('admin-panel')">
           <span class="tab-icon">⚡</span>
           <div class="tab-text">
             <strong>Admin Panelli Randevu Sistemi</strong>
@@ -171,7 +174,7 @@
             <span class="qr-design-hint">İncelemek istediğiniz tasarıma tıklayın (kapatmak için tekrar tıklayın)</span>
           </div>
           <div class="qr-design-buttons">
-            <button type="button" id="btn-admin-soft" class="qr-design-btn" data-design="soft"
+            <button type="button" id="btn-admin-soft" class="qr-design-btn active" data-design="soft"
               onclick="switchAdminDesign('soft', this)">
               <div class="qr-design-btn-left">
                 <span class="qr-design-btn-icon">🌸</span>
@@ -197,10 +200,10 @@
         </div>
 
         <!-- Collapsible Details Area for Admin -->
-        <div class="qr-design-details-area qr-admin-details-area" style="display: none;">
+        <div class="qr-design-details-area qr-admin-details-area">
           <div class="qr-card">
             <!-- Tasarım Varyantı 1: Soft Tasarım -->
-            <div id="admin-design-soft" class="qr-card-header qr-admin-design-content">
+            <div id="admin-design-soft" class="qr-card-header qr-admin-design-content active">
               <div class="qr-card-badge badge-primary">
                 ⭐ ÖNERİLEN PROFESYONEL ÇÖZÜM — SOFT TASARIM
               </div>
@@ -708,7 +711,7 @@
             <span class="qr-design-hint">İncelemek istediğiniz tasarıma tıklayın (kapatmak için tekrar tıklayın)</span>
           </div>
           <div class="qr-design-buttons">
-            <button type="button" id="btn-static-soft" class="qr-design-btn qr-static-design-btn" data-design="soft"
+            <button type="button" id="btn-static-soft" class="qr-design-btn qr-static-design-btn active" data-design="soft"
               onclick="switchStaticDesign('soft', this)">
               <div class="qr-design-btn-left">
                 <span class="qr-design-btn-icon">🌸</span>
@@ -734,10 +737,10 @@
         </div>
 
         <!-- Collapsible Details Area for Static -->
-        <div class="qr-design-details-area qr-static-details-area" style="display: none;">
+        <div class="qr-design-details-area qr-static-details-area">
           <div class="qr-card">
             <!-- Static Design Variant 1: Soft Tasarım -->
-            <div id="static-design-soft" class="qr-card-header qr-static-design-content">
+            <div id="static-design-soft" class="qr-card-header qr-static-design-content active">
               <div class="qr-card-badge badge-accent">
                 ⚡ EKONOMİK &amp; MİNİMALİST ÇÖZÜM — SOFT TASARIM
               </div>
@@ -1179,18 +1182,65 @@
         </div>
     </section>
 
-    <!-- Footer -->
+    <!-- Professional Studio Footer -->
     <footer>
-      <div class="footer-copy">
-        © 2025 ZiftStudio Digital. Tüm hakları saklıdır.
+      <div class="footer-container">
+        <div class="footer-brand">
+          <a href="../index.html" class="footer-logo">
+            <img src="../assets/logos/ziftstudio/ziftstudio-logo-1.png" alt="Zift Studio Logo" class="logo-img">
+            Zift <span>Studio</span>
+          </a>
+          <p class="footer-desc">
+            İşletmeler için yüksek performanslı web siteleri, yönetim panelleri ve dijital ürünler geliştiren modern teknoloji stüdyosu.
+          </p>
+        </div>
+
+        <div class="footer-col">
+          <div class="footer-col-title">Menü</div>
+          <ul class="footer-nav-list">
+            <li><a href="../index.html#hero">Ana Sayfa</a></li>
+            <li><a href="../index.html#services">Hizmetler</a></li>
+            <li><a href="projeler.html">Projeler</a></li>
+            <li><a href="../index.html#technologies">Teknolojiler</a></li>
+            <li><a href="../index.html#founder-about">Hakkımızda</a></li>
+            <li><a href="yazı.html">Blog</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <div class="footer-col-title">Çözümler</div>
+          <ul class="footer-nav-list">
+            <li><a href="qr-menu.html">QR Menü Sistemleri</a></li>
+            <li><a href="randevu.html">Randevu Motoru</a></li>
+            <li><a href="musteri-siteleri.html">Kurumsal Siteler</a></li>
+            <li><a href="saas.html">SaaS Araçları</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <div class="footer-col-title">İletişim</div>
+          <ul class="footer-nav-list">
+            <li><a href="mailto:muhammedalikitir.tr@gmail.com">muhammedalikitir.tr@gmail.com</a></li>
+            <li><a href="https://wa.me/905424786254" target="_blank" rel="noopener noreferrer">WhatsApp Destek</a></li>
+            <li><a href="https://www.linkedin.com/in/muhammed-ali-kitir" target="_blank" rel="noopener noreferrer">LinkedIn</a></li>
+            <li><a href="https://www.instagram.com/zift.studio" target="_blank" rel="noopener noreferrer">Instagram (@zift.studio)</a></li>
+          </ul>
+        </div>
       </div>
-      <ul class="footer-links">
-        <li><a href="gizlilik.html">Gizlilik</a></li>
-        <li><a href="../index.html#contact">İletişim</a></li>
-        <li>
-          <a href="terminal.html" class="footer-terminal-link" title="ZiftStudio Geliştirici Konsolu">>_</a>
-        </li>
-      </ul>
+
+      <div class="footer-bottom-bar">
+        <div class="footer-copy">© 2025 Zift Studio. Tüm hakları saklıdır.</div>
+        <ul class="footer-links">
+          <li><a href="gizlilik.html">Gizlilik Politikası</a></li>
+          <li><a href="gizlilik.html">Kullanım Koşulları</a></li>
+          <li><a href="../index.html#contact">İletişim</a></li>
+          <li>
+            <a href="terminal.html" class="footer-terminal-link" title="Zift Studio Geliştirici Konsolu">
+              &gt;_ Terminal
+            </a>
+          </li>
+        </ul>
+      </div>
     </footer>
   </div>
 

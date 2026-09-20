@@ -299,10 +299,11 @@ function initProgressBar() {
   if (!progressFill) return;
 
   const sections = [
-    { id: 'hero', label: 'Giriş', labelEn: 'Home' },
-    { id: 'founder-about', label: 'Stüdyo', labelEn: 'Studio' },
+    { id: 'hero', label: 'Ana Sayfa', labelEn: 'Home' },
+    { id: 'services', label: 'Hizmetler', labelEn: 'Services' },
     { id: 'projects', label: 'Projeler', labelEn: 'Projects' },
     { id: 'technologies', label: 'Teknolojiler', labelEn: 'Tech' },
+    { id: 'founder-about', label: 'Hakkımızda', labelEn: 'About' },
     { id: 'pricing', label: 'Paketler', labelEn: 'Pricing' },
     { id: 'blog', label: 'Blog', labelEn: 'Blog' },
     { id: 'contact', label: 'İletişim', labelEn: 'Contact' }
@@ -404,7 +405,7 @@ function openModal(idx) {
   const resolvedImg = p.img ? (p.img.startsWith('http') || p.img.startsWith('../') ? p.img : pathPrefix + p.img) : null;
 
   const visualContent = resolvedImg ? `
-    <div class="modal-visual" style="border: var(--border-width) solid var(--border); box-shadow: 6px 6px 0 var(--border); overflow: hidden; margin-bottom: 1.5rem; height: 260px; position: relative;">
+    <div class="modal-visual" style="border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow: hidden; margin-bottom: 1.5rem; height: 260px; position: relative;">
       <img src="${resolvedImg}" alt="${p.title}" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
     </div>
   ` : `
@@ -553,7 +554,7 @@ function filterBlogCategory(category, btnEl) {
   articles.forEach(card => {
     const cardCat = card.getAttribute('data-category');
     if (category === 'all' || cardCat === category) {
-      card.style.display = 'block';
+      card.style.display = '';
     } else {
       card.style.display = 'none';
     }
@@ -624,16 +625,19 @@ function switchAdminDesign(designType, clickedBtn) {
     detailsArea.style.display = 'block';
   }
 
-  // Update WhatsApp purchase button text/link to match chosen design
+  // Update WhatsApp purchase button text/link to match chosen design and page context
+  const isRandevu = window.location.pathname.includes('randevu') || !!document.getElementById('randevu-section');
   const purchaseBtns = container.querySelectorAll('.admin-purchase-btn');
   purchaseBtns.forEach(btn => {
     const designLabel = designType === 'modern' ? 'Modern Tasarım' : 'Soft Tasarım';
-    btn.href = `https://wa.me/905424786254?text=Merhaba,%20Admin%20Panelli%20${encodeURIComponent(designLabel)}%20Lisanslı%20QR%20Menü%20Satın%20Alım%20Paketi%20(27.500%20TL)%20hakkında%20görüşmek%20istiyorum.`;
+    const productName = isRandevu ? 'Randevu Sistemi' : 'QR Menü';
+    const priceText = isRandevu ? '35.000 TL' : '27.500 TL';
+    btn.href = `https://wa.me/905424786254?text=Merhaba,%20Admin%20Panelli%20${encodeURIComponent(designLabel)}%20Lisanslı%20${encodeURIComponent(productName)}%20Satın%20Alım%20Paketi%20(${encodeURIComponent(priceText)})%20hakkında%20görüşmek%20istiyorum.`;
     btn.innerHTML = `Admin Panelli (${designLabel}) Paketi Seç & İletişime Geç →`;
   });
 }
 
-// Statik QR Menu Design Switcher Logic (Soft vs Modern Toggle)
+// Statik QR Menu / Randevu Design Switcher Logic (Soft vs Modern Toggle)
 function switchStaticDesign(designType, clickedBtn) {
   const container = clickedBtn ? clickedBtn.closest('#qr-tab-static-menu') || document : document;
   const designBtns = container.querySelectorAll('.qr-static-design-btn');
@@ -671,12 +675,14 @@ function switchStaticDesign(designType, clickedBtn) {
     detailsArea.style.display = 'block';
   }
 
-  // Update WhatsApp purchase button text/link to match chosen design
+  // Update WhatsApp purchase button text/link to match chosen design and page context
+  const isRandevu = window.location.pathname.includes('randevu') || !!document.getElementById('randevu-section');
   const purchaseBtns = container.querySelectorAll('.static-purchase-btn');
   purchaseBtns.forEach(btn => {
     const designLabel = designType === 'modern' ? 'Modern Tasarım' : 'Soft Tasarım';
-    btn.href = `https://wa.me/905424786254?text=Merhaba,%20Statik%20${encodeURIComponent(designLabel)}%20Lisanslı%20QR%20Menü%20Satın%20Alım%20Paketi%20(12.500%20TL)%20hakkında%20bilgi%20almak%20istiyorum.`;
-    btn.innerHTML = `Statik Menü (${designLabel}) Paketini Seç & İletişime Geç →`;
+    const productName = isRandevu ? 'Randevu Sistemi' : 'QR Menü';
+    btn.href = `https://wa.me/905424786254?text=Merhaba,%20Statik%20${encodeURIComponent(designLabel)}%20Lisanslı%20${encodeURIComponent(productName)}%20Satın%20Alım%20Paketi%20(12.500%20TL)%20hakkında%20bilgi%20almak%20istiyorum.`;
+    btn.innerHTML = `Statik ${isRandevu ? 'Randevu Sistemi' : 'Menü'} (${designLabel}) Paketini Seç & İletişime Geç →`;
   });
 }
 
