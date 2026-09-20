@@ -1,1 +1,2 @@
-# ZIFT-STUDIO-6.8
+# ZIFT-STUDIO-7.0
+
