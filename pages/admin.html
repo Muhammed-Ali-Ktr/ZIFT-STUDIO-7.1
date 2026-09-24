@@ -1,0 +1,2791 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZiftStudio — Gelişmiş Blog Yönetim Paneli</title>
+  <meta name="robots" content="noindex, nofollow">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="../assets/favicon/favicon.ico">
+  
+  <!-- Fontlar & Stil Dosyaları -->
+  <link rel="stylesheet" href="../CSS/style.css">
+
+  <!-- Supabase JS Client v2 CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    /* ==========================================================================
+       ZIFT STUDIO — ADVANCED BLOG CMS DASHBOARD (REFERANS TASARIM MİMARİSİ)
+       ========================================================================== */
+    
+    :root {
+      --sidebar-width: 250px;
+      --cms-bg: #f8fafc;
+      --cms-card-bg: #ffffff;
+      --cms-border: #e2e8f0;
+      --cms-text: #0f172a;
+      --cms-text-muted: #64748b;
+      --cms-accent: #2563eb;
+      --cms-accent-hover: #1d4ed8;
+      --cms-success: #10b981;
+      --cms-warning: #f59e0b;
+      --cms-sidebar-bg: #090d16;
+      --cms-sidebar-text: #94a3b8;
+    }
+
+    body[data-theme="dark"] {
+      --cms-bg: #0b0f17;
+      --cms-card-bg: #111827;
+      --cms-border: #1e293b;
+      --cms-text: #f8fafc;
+      --cms-text-muted: #94a3b8;
+      --cms-accent: #38bdf8;
+      --cms-accent-hover: #0284c7;
+      --cms-sidebar-bg: #070a10;
+      --cms-sidebar-text: #64748b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--cms-bg);
+      color: var(--cms-text);
+      font-family: var(--font-sans, "Plus Jakarta Sans", sans-serif);
+      min-height: 100vh;
+      display: flex;
+      overflow-x: hidden;
+    }
+
+    /* --- AUTH OVERLAY / ŞİFRE KORUMA EKRANI --- */
+    .auth-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(11, 15, 23, 0.88);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 99999;
+      padding: 1.5rem;
+    }
+
+    .auth-card {
+      background: var(--cms-card-bg);
+      border: 1px solid var(--cms-border);
+      border-radius: var(--radius-xl, 20px);
+      padding: 3rem 2.5rem;
+      max-width: 440px;
+      width: 100%;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      text-align: center;
+    }
+
+    .auth-icon-wrap {
+      width: 60px;
+      height: 60px;
+      background: rgba(37, 99, 235, 0.1);
+      border: 1px solid rgba(37, 99, 235, 0.25);
+      border-radius: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      margin-bottom: 1.5rem;
+      color: var(--cms-accent);
+    }
+
+    /* --- SOL YÖNETİM SIDEBAR (REFERANS GÖRSEL İLE BİREBİR) --- */
+    .cms-sidebar {
+      width: var(--sidebar-width);
+      background: var(--cms-sidebar-bg);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      z-index: 1000;
+      border-right: 1px solid rgba(255, 255, 255, 0.08);
+      transition: transform 0.3s ease;
+    }
+
+    .sidebar-brand-box {
+      padding: 1.5rem 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .sidebar-logo-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #2563eb, #38bdf8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 1.2rem;
+      color: #fff;
+    }
+
+    .sidebar-brand-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+
+    .sidebar-brand-badge {
+      font-size: 0.68rem;
+      color: #38bdf8;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 1.25rem 0.85rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0.75rem 1rem;
+      color: #94a3b8;
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 600;
+      border-radius: 10px;
+      transition: all 0.2s ease;
+    }
+
+    .sidebar-link:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .sidebar-link.active {
+      color: #fff;
+      background: #1e293b;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .sidebar-sub-menu {
+      margin-left: 2.2rem;
+      padding: 4px 0 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      border-left: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .sidebar-sub-link {
+      padding: 0.45rem 0.85rem;
+      font-size: 0.82rem;
+      color: #64748b;
+      text-decoration: none;
+      border-radius: 6px;
+      transition: all 0.15s;
+    }
+
+    .sidebar-sub-link:hover, .sidebar-sub-link.active {
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.08);
+      font-weight: 600;
+    }
+
+    .sidebar-footer-card {
+      padding: 1.25rem;
+      margin: 1rem 0.85rem;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .sidebar-footer-card .brand-z {
+      font-weight: 900;
+      font-size: 1.15rem;
+      color: #38bdf8;
+      font-style: italic;
+    }
+
+    /* --- SAĞ ANA İÇERİK ALANI --- */
+    .cms-main-wrapper {
+      margin-left: var(--sidebar-width);
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* ÜST HEADER BAR */
+    .cms-top-header {
+      height: 72px;
+      background: var(--cms-card-bg);
+      border-bottom: 1px solid var(--cms-border);
+      padding: 0 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 500;
+      backdrop-filter: blur(12px);
+    }
+
+    .cms-header-title-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .cms-header-title-box h1 {
+      font-size: 1.18rem;
+      font-weight: 800;
+      color: var(--cms-text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .cms-header-title-box span {
+      font-size: 0.8rem;
+      color: var(--cms-text-muted);
+      font-weight: 500;
+      margin-left: 8px;
+      display: none;
+    }
+
+    @media (min-width: 900px) {
+      .cms-header-title-box span { display: inline; }
+    }
+
+    .cms-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .icon-action-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      border: 1px solid var(--cms-border);
+      background: var(--cms-bg);
+      color: var(--cms-text);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s;
+    }
+
+    .icon-action-btn:hover {
+      border-color: var(--cms-accent);
+      background: var(--cms-card-bg);
+    }
+
+    .notif-badge-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #ef4444;
+      position: absolute;
+      top: 7px;
+      right: 7px;
+    }
+
+    .user-profile-chip {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 4px 10px 4px 4px;
+      border-radius: 30px;
+      border: 1px solid var(--cms-border);
+      background: var(--cms-bg);
+    }
+
+    .user-profile-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid var(--cms-border);
+    }
+
+    .user-profile-name {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--cms-text);
+      line-height: 1.1;
+    }
+
+    .user-profile-role {
+      font-size: 0.7rem;
+      color: var(--cms-text-muted);
+    }
+
+    /* EYLEM SUB-BAR (Tüm Yazılara Dön / Taslak / Önizleme / Yayınla) */
+    .cms-action-subbar {
+      padding: 1.25rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .back-btn-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0.6rem 1.2rem;
+      border-radius: 30px;
+      background: var(--cms-card-bg);
+      border: 1px solid var(--cms-border);
+      color: var(--cms-text);
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .back-btn-pill:hover {
+      border-color: var(--cms-accent);
+      transform: translateX(-2px);
+    }
+
+    .action-buttons-cluster {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .cms-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0.65rem 1.25rem;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+      outline: none;
+    }
+
+    .cms-btn-secondary {
+      background: var(--cms-card-bg);
+      border-color: var(--cms-border);
+      color: var(--cms-text);
+    }
+
+    .cms-btn-secondary:hover {
+      background: var(--cms-bg);
+      border-color: var(--cms-text-muted);
+    }
+
+    .cms-btn-primary {
+      background: #2563eb;
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    }
+
+    .cms-btn-primary:hover {
+      background: #1d4ed8;
+      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+      transform: translateY(-1px);
+    }
+
+    .cms-btn-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* --- 3 KOLONLU BENTO DASHBOARD GRID (MİMARİ YAPI) --- */
+    .cms-editor-grid {
+      padding: 0 2rem 3rem;
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.8fr) minmax(0, 0.8fr);
+      gap: 1.5rem;
+      align-items: start;
+    }
+
+    /* KART STİLLERİ (Ferah, Minimalist, Glassmorphism & Tok Kenarlar) */
+    .cms-card {
+      background: var(--cms-card-bg);
+      border: 1px solid var(--cms-border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.02), 0 1px 2px -1px rgba(0, 0, 0, 0.02);
+      margin-bottom: 1.5rem;
+      position: relative;
+    }
+
+    .cms-card:last-child {
+      margin-bottom: 0;
+    }
+
+    .cms-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--cms-border);
+    }
+
+    .cms-card-title {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: var(--cms-text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      letter-spacing: -0.01em;
+    }
+
+    /* FORM ELEMANLARI */
+    .cms-form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .cms-form-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .cms-label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--cms-text-muted);
+      margin-bottom: 0.5rem;
+      letter-spacing: 0.02em;
+    }
+
+    .cms-input, .cms-select, .cms-textarea {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      border: 1px solid var(--cms-border);
+      background: var(--cms-bg);
+      color: var(--cms-text);
+      font-family: inherit;
+      font-size: 0.9rem;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .cms-input:focus, .cms-select:focus, .cms-textarea:focus {
+      border-color: var(--cms-accent);
+      background: var(--cms-card-bg);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+
+    .title-input-large {
+      font-size: 1.15rem;
+      font-weight: 700;
+      padding: 0.85rem 1.15rem;
+    }
+
+    /* PERMALINK & URL KUTUSU */
+    .permalink-preview-box {
+      margin-top: 0.5rem;
+      font-size: 0.78rem;
+      color: var(--cms-text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .permalink-link {
+      color: var(--cms-accent);
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    .copy-slug-icon-btn {
+      background: transparent;
+      border: none;
+      color: var(--cms-text-muted);
+      cursor: pointer;
+      padding: 2px 4px;
+      font-size: 0.85rem;
+      transition: color 0.15s;
+    }
+
+    .copy-slug-icon-btn:hover {
+      color: var(--cms-accent);
+    }
+
+    /* --- GELİŞMİŞ RICH TEXT EDİTÖR --- */
+    .rich-editor-wrapper {
+      border: 1px solid var(--cms-border);
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--cms-card-bg);
+      margin-top: 0.5rem;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Menü Barı (Dosya / Düzenle / Görünüm / Ekle...) */
+    .editor-menu-strip {
+      background: var(--cms-bg);
+      border-bottom: 1px solid var(--cms-border);
+      padding: 0.35rem 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 0.78rem;
+      color: var(--cms-text-muted);
+      user-select: none;
+    }
+
+    .editor-menu-item {
+      cursor: pointer;
+      transition: color 0.15s;
+    }
+
+    .editor-menu-item:hover {
+      color: var(--cms-accent);
+    }
+
+    /* Araç Çubuğu (Toolbar) */
+    .editor-toolbar-strip {
+      padding: 0.5rem 0.75rem;
+      background: var(--cms-card-bg);
+      border-bottom: 1px solid var(--cms-border);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .tb-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      padding-right: 6px;
+      margin-right: 6px;
+      border-right: 1px solid var(--cms-border);
+    }
+
+    .tb-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--cms-text);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .tb-btn:hover {
+      background: var(--cms-bg);
+      border-color: var(--cms-border);
+      color: var(--cms-accent);
+    }
+
+    .tb-btn.active {
+      background: rgba(37, 99, 235, 0.1);
+      color: var(--cms-accent);
+      border-color: rgba(37, 99, 235, 0.25);
+    }
+
+    .tb-select {
+      height: 32px;
+      padding: 0 0.5rem;
+      border-radius: 6px;
+      border: 1px solid var(--cms-border);
+      background: var(--cms-bg);
+      color: var(--cms-text);
+      font-size: 0.82rem;
+      cursor: pointer;
+      outline: none;
+    }
+
+    /* Contenteditable Editör Alanı */
+    .editable-canvas {
+      min-height: 460px;
+      max-height: 850px;
+      overflow-y: auto;
+      padding: 1.75rem 2rem;
+      font-size: 1rem;
+      line-height: 1.8;
+      color: var(--cms-text);
+      outline: none;
+    }
+
+    .editable-canvas:focus {
+      background: rgba(37, 99, 235, 0.005);
+    }
+
+    .editable-canvas h1 { font-size: 1.85rem; font-weight: 800; margin: 1.5rem 0 0.75rem; letter-spacing: -0.02em; }
+    .editable-canvas h2 { font-size: 1.45rem; font-weight: 800; margin: 1.5rem 0 0.75rem; }
+    .editable-canvas h3 { font-size: 1.2rem; font-weight: 700; margin: 1.25rem 0 0.5rem; }
+    .editable-canvas p { margin-bottom: 1.15rem; color: var(--cms-text); }
+    .editable-canvas blockquote {
+      border-left: 3px solid var(--cms-accent);
+      padding: 0.85rem 1.25rem;
+      background: var(--cms-bg);
+      border-radius: 0 8px 8px 0;
+      font-style: italic;
+      color: var(--cms-text-muted);
+      margin: 1.5rem 0;
+    }
+    .editable-canvas pre {
+      background: #0f172a;
+      color: #38bdf8;
+      padding: 1rem;
+      border-radius: 8px;
+      font-family: var(--font-mono, monospace);
+      font-size: 0.88rem;
+      margin: 1rem 0;
+      overflow-x: auto;
+    }
+    .editable-canvas img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 12px;
+      border: 1px solid var(--cms-border);
+      margin: 1rem 0;
+      display: block;
+      cursor: pointer;
+      transition: outline 0.15s;
+    }
+    .editable-canvas img.selected-img {
+      outline: 3px solid var(--cms-accent);
+    }
+    .editable-canvas table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+    }
+    .editable-canvas table, .editable-canvas th, .editable-canvas td {
+      border: 1px solid var(--cms-border);
+      padding: 8px 12px;
+    }
+    .editable-canvas th { background: var(--cms-bg); font-weight: 700; }
+
+    /* Editör Durum Çubuğu */
+    .editor-status-bar {
+      padding: 0.5rem 1rem;
+      background: var(--cms-bg);
+      border-top: 1px solid var(--cms-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--cms-text-muted);
+      user-select: none;
+    }
+
+    .editor-status-metrics {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* --- SAĞ ORTA ALAN: GÖRSEL EKLEME, BİÇİMLENDİRME & EK ÖZELLİKLER --- */
+    
+    /* Segmented Tabs (Cihazdan Yükle / URL ile Ekle) */
+    .segmented-tabs-wrap {
+      display: flex;
+      padding: 4px;
+      background: var(--cms-bg);
+      border-radius: 10px;
+      border: 1px solid var(--cms-border);
+      margin-bottom: 1rem;
+    }
+
+    .seg-tab-btn {
+      flex: 1;
+      padding: 0.5rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--cms-text-muted);
+      border-radius: 7px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .seg-tab-btn.active {
+      background: var(--cms-card-bg);
+      color: var(--cms-accent);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Drag & Drop Zone */
+    .drag-drop-zone {
+      border: 2px dashed var(--cms-border);
+      border-radius: 12px;
+      padding: 1.75rem 1rem;
+      text-align: center;
+      background: var(--cms-bg);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .drag-drop-zone:hover, .drag-drop-zone.dragover {
+      border-color: var(--cms-accent);
+      background: rgba(37, 99, 235, 0.03);
+    }
+
+    .upload-cloud-icon {
+      font-size: 2.2rem;
+      color: var(--cms-accent);
+      margin-bottom: 0.5rem;
+    }
+
+    /* Yüklenen Görsel Kartı */
+    .uploaded-img-preview-box {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 12px;
+      background: var(--cms-bg);
+      border: 1px solid var(--cms-border);
+      border-radius: 10px;
+      margin: 1rem 0;
+    }
+
+    .uploaded-img-thumb {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      object-fit: cover;
+      border: 1px solid var(--cms-border);
+    }
+
+    .uploaded-img-meta {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .uploaded-img-name {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--cms-text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .uploaded-img-size {
+      font-size: 0.72rem;
+      color: var(--cms-text-muted);
+    }
+
+    .img-remove-btn {
+      background: transparent;
+      border: none;
+      color: #ef4444;
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 4px;
+    }
+
+    /* Renk Seçiciler & Biçimlendirme */
+    .color-swatch-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 0.75rem;
+    }
+
+    .color-picker-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .color-dot-indicator {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 2px solid var(--cms-border);
+      cursor: pointer;
+      position: relative;
+    }
+
+    .native-color-input {
+      position: absolute;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+
+    /* iOS/macOS Modern Toggle Switch */
+    .toggle-row-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.65rem 0;
+      border-bottom: 1px solid var(--cms-border);
+    }
+
+    .toggle-row-item:last-child {
+      border-bottom: none;
+    }
+
+    .toggle-label-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--cms-text);
+    }
+
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 22px;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: var(--cms-border);
+      transition: .3s cubic-bezier(0.16, 1, 0.3, 1);
+      border-radius: 34px;
+    }
+
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .3s cubic-bezier(0.16, 1, 0.3, 1);
+      border-radius: 50%;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    input:checked + .toggle-slider {
+      background-color: #2563eb;
+    }
+
+    input:checked + .toggle-slider:before {
+      transform: translateX(18px);
+    }
+
+    /* --- EN SAĞ ALAN: KATEGORİ, YAYIN AYARLARI, GOOGLE SEO ÖNİZLEME --- */
+    
+    /* Tag Chips */
+    .tag-chips-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 0.75rem;
+    }
+
+    .tag-chip {
+      background: var(--cms-bg);
+      border: 1px solid var(--cms-border);
+      color: var(--cms-accent);
+      padding: 3px 8px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .tag-chip-remove {
+      cursor: pointer;
+      color: var(--cms-text-muted);
+      font-size: 0.8rem;
+    }
+
+    .tag-chip-remove:hover {
+      color: #ef4444;
+    }
+
+    /* Google SERP Snippet Preview (Referans Kartı) */
+    .google-serp-preview {
+      background: var(--cms-bg);
+      border: 1px solid var(--cms-border);
+      border-radius: 12px;
+      padding: 1rem 1.15rem;
+      font-family: Arial, sans-serif;
+      margin-bottom: 1rem;
+    }
+
+    .serp-site-info {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      color: #4d5156;
+      margin-bottom: 4px;
+    }
+
+    .serp-favicon {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #2563eb;
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      font-weight: bold;
+    }
+
+    .serp-url {
+      color: #202124;
+      font-size: 0.75rem;
+      word-break: break-all;
+    }
+
+    .serp-title {
+      font-size: 1.05rem;
+      color: #1a0dab;
+      font-weight: 500;
+      line-height: 1.3;
+      margin-bottom: 4px;
+      cursor: pointer;
+    }
+
+    body[data-theme="dark"] .serp-title {
+      color: #8ab4f8;
+    }
+
+    .serp-snippet {
+      font-size: 0.8rem;
+      color: #4d5156;
+      line-height: 1.5;
+    }
+
+    body[data-theme="dark"] .serp-snippet {
+      color: #bdc1c6;
+    }
+
+    .seo-tip-box {
+      padding: 0.85rem 1rem;
+      background: rgba(37, 99, 235, 0.05);
+      border: 1px solid rgba(37, 99, 235, 0.15);
+      border-radius: 10px;
+      font-size: 0.78rem;
+      color: var(--cms-accent);
+      line-height: 1.5;
+    }
+
+    /* --- MODALLAR: CANLI ÖNİZLEME & GÖRSEL AYARLARI --- */
+    .cms-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(11, 15, 23, 0.85);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      z-index: 100000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .cms-modal-content {
+      background: var(--cms-card-bg);
+      border: 1px solid var(--cms-border);
+      border-radius: 20px;
+      max-width: 900px;
+      width: 100%;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+      overflow: hidden;
+    }
+
+    .cms-modal-header {
+      padding: 1.25rem 2rem;
+      border-bottom: 1px solid var(--cms-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .cms-modal-body {
+      padding: 2rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    /* --- MEVCUT YAZILAR YÖNETİM TABLOSU --- */
+    .posts-manager-section {
+      padding: 0 2rem 4rem;
+    }
+
+    .post-table-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--cms-border);
+      transition: background 0.15s;
+    }
+
+    .post-table-row:hover {
+      background: var(--cms-bg);
+    }
+
+    /* --- İSTATİSTİKLER & GÖRÜNTÜLENME ANALİTİĞİ --- */
+    .stats-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      padding: 1.25rem;
+      background: var(--cms-bg);
+      border-radius: var(--cms-radius-md);
+      margin-bottom: 1.5rem;
+      border: 1px solid var(--cms-border);
+    }
+
+    .stats-kpi-card {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: var(--cms-card-bg);
+      padding: 1rem 1.25rem;
+      border-radius: 12px;
+      border: 1px solid var(--cms-border);
+      box-shadow: var(--cms-shadow-sm);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .stats-kpi-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--cms-shadow-md);
+    }
+
+    .kpi-icon-wrap {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      flex-shrink: 0;
+    }
+
+    .kpi-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .kpi-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--cms-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 2px;
+    }
+
+    .kpi-value {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--cms-text);
+      line-height: 1.2;
+    }
+
+    .kpi-sub {
+      font-size: 0.72rem;
+      color: var(--cms-text-muted);
+      margin-top: 2px;
+    }
+
+    .stats-table-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--cms-border);
+      gap: 1rem;
+      transition: background 0.15s;
+    }
+
+    .stats-table-row:hover {
+      background: var(--cms-bg);
+    }
+
+    .stats-rank-badge {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 0.85rem;
+      flex-shrink: 0;
+      background: var(--cms-bg);
+      color: var(--cms-text-muted);
+      border: 1px solid var(--cms-border);
+    }
+
+    .stats-rank-badge.rank-1 {
+      background: linear-gradient(135deg, #fef08a, #f59e0b);
+      color: #78350f;
+      border-color: #f59e0b;
+      box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+    }
+
+    .stats-rank-badge.rank-2 {
+      background: linear-gradient(135deg, #f1f5f9, #94a3b8);
+      color: #334155;
+      border-color: #94a3b8;
+    }
+
+    .stats-rank-badge.rank-3 {
+      background: linear-gradient(135deg, #fed7aa, #ea580c);
+      color: #7c2d12;
+      border-color: #ea580c;
+    }
+
+    .views-bar-wrap {
+      width: 100px;
+      height: 7px;
+      background: var(--cms-border);
+      border-radius: 999px;
+      overflow: hidden;
+      display: inline-block;
+      vertical-align: middle;
+      margin-left: 8px;
+    }
+
+    .views-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #2563eb, #38bdf8);
+      border-radius: 999px;
+      transition: width 0.4s ease;
+    }
+
+    .views-pill-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 999px;
+      background: rgba(37, 99, 235, 0.1);
+      color: var(--cms-accent);
+      font-weight: 700;
+      font-size: 0.88rem;
+      border: 1px solid rgba(37, 99, 235, 0.2);
+      white-space: nowrap;
+    }
+
+    /* --- RESPONSIVE TASARIM (3 KOLON -> 2 KOLON -> 1 KOLON) --- */
+    @media (max-width: 1280px) {
+      .cms-editor-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+      .col-left-main {
+        grid-column: 1 / -1;
+      }
+    }
+
+    @media (max-width: 860px) {
+      .cms-sidebar {
+        transform: translateX(-100%);
+      }
+      .cms-sidebar.mobile-open {
+        transform: translateX(0);
+      }
+      .cms-main-wrapper {
+        margin-left: 0;
+      }
+      .cms-editor-grid {
+        grid-template-columns: 1fr;
+        padding: 0 1rem 2rem;
+      }
+      .cms-top-header, .cms-action-subbar, .posts-manager-section {
+        padding-left: 1rem;
+        padding-right: 1rem;
+      }
+    }
+  </style>
+</head>
+<body data-theme="light">
+
+  <!-- 1. ŞİFRE GİRİŞ GÜVENLİK KAPISI (AUTH OVERLAY) -->
+  <div class="auth-overlay" id="authOverlay">
+    <div class="auth-card">
+      <div class="auth-icon-wrap">🔐</div>
+      <h2 style="font-size: 1.45rem; font-weight: 800; color: var(--cms-text); margin-bottom: 0.4rem;">
+        ZiftStudio Admin Girişi
+      </h2>
+      <p style="font-size: 0.85rem; color: var(--cms-text-muted); margin-bottom: 1.75rem;">
+        Blog yönetim ve içerik editörüne erişmek için yönetici anahtarınızı girin.
+      </p>
+
+      <form id="authForm" onsubmit="handleAdminLogin(event)">
+        <div class="cms-form-group" style="text-align: left;">
+          <label class="cms-label" for="adminPassword">Yönetici Şifresi</label>
+          <input type="password" id="adminPassword" class="cms-input" placeholder="••••••••" required autofocus>
+        </div>
+
+        <button type="submit" class="cms-btn cms-btn-primary" style="width: 100%; padding: 0.85rem;">
+          Panele Giriş Yap →
+        </button>
+
+        <p id="authErrorMsg" style="color: #ef4444; font-size: 0.82rem; margin-top: 1rem; display: none;">
+          ⚠️ Hatalı şifre! Lütfen tekrar deneyin.
+        </p>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. SOL STUDIO SIDEBAR (COLLAPSIBLE / DESKTOP FIXED) -->
+  <aside class="cms-sidebar" id="cmsSidebar">
+    
+    <!-- Logo ve Marka -->
+    <div class="sidebar-brand-box">
+      <div class="sidebar-logo-icon">Z</div>
+      <div>
+        <div class="sidebar-brand-title">ZiftStudio</div>
+        <div class="sidebar-brand-badge">Blog Paneli</div>
+      </div>
+    </div>
+
+    <!-- Menü Öğeleri -->
+    <nav class="sidebar-nav">
+      <a href="../index.html" class="sidebar-link">
+        <span>🏠</span> Ana Sayfa
+      </a>
+      <a href="../index.html#services" class="sidebar-link">
+        <span>⚙️</span> Site Yönetimi
+      </a>
+      
+      <!-- Blog Yönetimi (Aktif) -->
+      <a href="#" class="sidebar-link active" onclick="return false;">
+        <span>✍️</span> Blog Yönetimi
+      </a>
+      <div class="sidebar-sub-menu">
+        <a href="#editorSection" class="sidebar-sub-link active" onclick="scrollToEditor(); return false;">✏️ Yeni Yazı / Editör</a>
+        <a href="#statsSection" class="sidebar-sub-link" onclick="scrollToStatsSection(); return false;">📊 İstatistikler &amp; Okunmalar</a>
+        <a href="#postsListSection" class="sidebar-sub-link" onclick="scrollToPostsList(); return false;">📄 Tüm Yazılar</a>
+        <a href="#postsListSection" class="sidebar-sub-link" onclick="scrollToPostsList(); return false;">🏷️ Kategoriler</a>
+      </div>
+
+      <a href="#mediaSection" class="sidebar-link" onclick="triggerFileInput(); return false;">
+        <span>🖼️</span> Medya
+      </a>
+      <a href="#statsSection" class="sidebar-link" onclick="scrollToStatsSection(); return false;">
+        <span>📊</span> İstatistikler
+      </a>
+    </nav>
+
+    <!-- Alt Marka Kartı -->
+    <div class="sidebar-footer-card">
+      <span class="brand-z">Z</span>
+      <div>
+        <div style="font-size: 0.8rem; font-weight: 700; color: #fff;">ZIFT STUDIO</div>
+        <div style="font-size: 0.68rem; color: #64748b;">Daha iyi bir dijital gelecek için...</div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- 3. SAĞ ANA CMS YÖNETİM WRAPPER -->
+  <div class="cms-main-wrapper" id="cmsMainWrapper" style="display: none;">
+    
+    <!-- Üst Header Bar -->
+    <header class="cms-top-header">
+      <div class="cms-header-title-box">
+        <button type="button" class="icon-action-btn" id="mobileMenuToggle" style="display: none;" onclick="toggleMobileSidebar()">
+          ☰
+        </button>
+        <h1>
+          <span>✍️</span> ZiftStudio <span style="color: var(--cms-accent);">Blog Paneli</span>
+        </h1>
+        <span>— Dinamik içerik oluşturucu ve Supabase veritabanı senkronizasyonu</span>
+      </div>
+
+      <div class="cms-header-actions">
+        <!-- Tema Değiştirici -->
+        <button type="button" class="icon-action-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Temayı Değiştir">
+          <span id="themeIcon">☀️</span>
+        </button>
+
+        <!-- Bildirimler -->
+        <button type="button" class="icon-action-btn" title="Bildirimler" onclick="alert('Sistem güncel. Supabase bağlantısı aktif.')">
+          🔔
+          <span class="notif-badge-dot"></span>
+        </button>
+
+        <!-- Yönetici Profil Çipi -->
+        <div class="user-profile-chip">
+          <img src="../assets/image/hero-avatar.jpg" alt="Muhammet Ali" class="user-profile-avatar" onerror="this.src='https://ui-avatars.com/api/?name=Muhammet+Ali&background=2563eb&color=fff'">
+          <div>
+            <div class="user-profile-name">Muhammet Ali</div>
+            <div class="user-profile-role">Yönetici</div>
+          </div>
+        </div>
+
+        <!-- Çıkış Yap -->
+        <button type="button" class="icon-action-btn" onclick="handleAdminLogout()" title="Oturumu Kapat">
+          ⎋
+        </button>
+      </div>
+    </header>
+
+    <!-- Aksiyon Alt Çubuğu (Geri Dön / Taslak / Önizleme / Yayınla) -->
+    <div class="cms-action-subbar">
+      <a href="yazı.html" class="back-btn-pill">
+        ← Tüm Blog Yazılarına Dön
+      </a>
+
+      <div class="action-buttons-cluster">
+        <button type="button" class="cms-btn cms-btn-secondary" onclick="handleSaveDraft()">
+          💾 Taslak Olarak Kaydet
+        </button>
+        <button type="button" class="cms-btn cms-btn-secondary" onclick="openLivePreviewModal()">
+          👁️ Önizleme
+        </button>
+        <button type="button" class="cms-btn cms-btn-primary" id="publishBtn" onclick="handlePublishPost()">
+          🚀 Yazıyı Yayınla
+        </button>
+      </div>
+    </div>
+
+    <!-- ==========================================================================
+         4. 3-KOLONLU BENTO DASHBOARD GRID (SOL / ORTA / SAĞ)
+         ========================================================================== -->
+    <main class="cms-editor-grid" id="editorSection">
+      
+      <!-- ======================================================================
+           KOLON 1: SOL / ANA ALAN (BAŞLIK, PERMALINK & ZENGİN METİN EDİTÖRÜ)
+           ====================================================================== -->
+      <div class="col-left-main">
+        <div class="cms-card">
+          <div class="cms-card-header">
+            <h2 class="cms-card-title" id="formCardTitle">
+              ✨ Yeni Blog Yazısı Oluştur
+            </h2>
+            <span id="saveStatusIndicator" style="font-size: 0.75rem; color: var(--cms-success); font-weight: 600;">
+              ✓ Hazır
+            </span>
+          </div>
+
+          <!-- Başlık & Permalink -->
+          <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
+            <div class="cms-form-group">
+              <label class="cms-label" for="postTitle">Başlık *</label>
+              <input type="text" id="postTitle" class="cms-input title-input-large" placeholder="Örn: Web Tasarımda 2025 Trendleri: Daha Modern, Daha Etkileşimli" required oninput="handleTitleChange(this.value)">
+            </div>
+
+            <div class="cms-form-group">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <label class="cms-label" for="postSlug" style="margin-bottom: 0;">Permalink (SEO Dostu URL) *</label>
+                <button type="button" style="background: none; border: none; font-size: 0.72rem; color: var(--cms-accent); cursor: pointer; font-weight: 700;" onclick="toggleSlugManual()">
+                  Düzenle
+                </button>
+              </div>
+              <input type="text" id="postSlug" class="cms-input" placeholder="web-tasarimda-2025-trendleri" readonly required oninput="updateSeoPreview()">
+              
+              <!-- Dinamik URL Gösterimi & Kopyalama -->
+              <div class="permalink-preview-box">
+                <span>URL:</span>
+                <span class="permalink-link" id="permalinkFullDisplay" onclick="copyPermalinkUrl()">https://ziftstudio.site/pages/blog-detay.html?slug=web-tasarimda-2025-trendleri</span>
+                <button type="button" class="copy-slug-icon-btn" onclick="copyPermalinkUrl()" title="URL'yi Kopyala">📋</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Zengin Metin Editörü (Rich Text Editor) -->
+          <div class="cms-form-group">
+            <label class="cms-label">İçerik *</label>
+            
+            <div class="rich-editor-wrapper">
+              
+              <!-- Menü Şeridi (Dosya, Düzenle, Görünüm...) -->
+              <div class="editor-menu-strip">
+                <span class="editor-menu-item" onclick="execCmd('selectAll')">Düzenle</span>
+                <span class="editor-menu-item" onclick="triggerFileInput()">Ekle</span>
+                <span class="editor-menu-item" onclick="insertTableDialog()">Tablo</span>
+                <span class="editor-menu-item" onclick="insertHorizontalRule()">Biçim</span>
+                <span class="editor-menu-item" onclick="clearFormatting()">Temizle</span>
+                <span class="editor-menu-item" onclick="openLivePreviewModal()">Önizleme</span>
+              </div>
+
+              <!-- Araç Çubuğu (Toolbar) -->
+              <div class="editor-toolbar-strip">
+                
+                <!-- Geri / İleri -->
+                <div class="tb-group">
+                  <button type="button" class="tb-btn" onclick="execCmd('undo')" title="Geri Al">↺</button>
+                  <button type="button" class="tb-btn" onclick="execCmd('redo')" title="İleri Al">↻</button>
+                </div>
+
+                <!-- Başlık Seviyesi Dropdown -->
+                <div class="tb-group">
+                  <select class="tb-select" id="headingSelect" onchange="formatHeading(this.value)">
+                    <option value="p">Normal Metin</option>
+                    <option value="h1">Başlık 1 (H1)</option>
+                    <option value="h2">Başlık 2 (H2)</option>
+                    <option value="h3">Başlık 3 (H3)</option>
+                    <option value="h4">Başlık 4 (H4)</option>
+                  </select>
+                </div>
+
+                <!-- Kalın, İtalik, Altı Çizili, Üstü Çizili -->
+                <div class="tb-group">
+                  <button type="button" class="tb-btn" onclick="execCmd('bold')" title="Kalın (Ctrl+B)"><b>B</b></button>
+                  <button type="button" class="tb-btn" onclick="execCmd('italic')" title="İtalik (Ctrl+I)"><i>I</i></button>
+                  <button type="button" class="tb-btn" onclick="execCmd('underline')" title="Altı Çizili (Ctrl+U)"><u>U</u></button>
+                  <button type="button" class="tb-btn" onclick="execCmd('strikeThrough')" title="Üstü Çizili"><s>S</s></button>
+                </div>
+
+                <!-- Hizalama -->
+                <div class="tb-group">
+                  <button type="button" class="tb-btn" onclick="execCmd('justifyLeft')" title="Sola Yasla">≡</button>
+                  <button type="button" class="tb-btn" onclick="execCmd('justifyCenter')" title="Ortala">☷</button>
+                  <button type="button" class="tb-btn" onclick="execCmd('justifyRight')" title="Sağa Yasla">≣</button>
+                  <button type="button" class="tb-btn" onclick="execCmd('justifyFull')" title="İki Yana Yasla">▦</button>
+                </div>
+
+                <!-- Listeler -->
+                <div class="tb-group">
+                  <button type="button" class="tb-btn" onclick="execCmd('insertUnorderedList')" title="Madde İmleri">•≡</button>
+                  <button type="button" class="tb-btn" onclick="execCmd('insertOrderedList')" title="Numaralı Liste">1≡</button>
+                </div>
+
+                <!-- İçerik Elementleri: Link, Görsel, Video, Kod, Alıntı, Tablo -->
+                <div class="tb-group" style="border-right: none;">
+                  <button type="button" class="tb-btn" onclick="insertLinkDialog()" title="Link Ekle">🔗</button>
+                  <button type="button" class="tb-btn" onclick="triggerFileInput()" title="İçeriğe Görsel Ekle">🖼️</button>
+                  <button type="button" class="tb-btn" onclick="insertVideoDialog()" title="Video / Embed Ekle">📹</button>
+                  <button type="button" class="tb-btn" onclick="insertCodeBlock()" title="Kod Bloğu">&lt;/&gt;</button>
+                  <button type="button" class="tb-btn" onclick="insertBlockquote()" title="Alıntı Kutusu">❝</button>
+                  <button type="button" class="tb-btn" onclick="insertTableDialog()" title="Tablo Ekle">▦</button>
+                </div>
+
+              </div>
+
+              <!-- İçerik Düzenleme Alanı (Contenteditable Canvas) -->
+              <div class="editable-canvas" id="editorCanvas" contenteditable="true" spellcheck="false" oninput="handleEditorInput()">
+                <h2>Web Tasarımda 2025 Trendleri: Daha Modern, Daha Etkileşimli</h2>
+                <p>Dijital dünyada rekabet her geçen gün artarken, web tasarım da bu rekabete ayak uydurmak zorunda. 2025 yılı, daha modern, daha hızlı ve daha etkileşimli web sitelerinin yılı olacak. İşte öne çıkan bazı trendler:</p>
+                <h3>1. Minimal ve Temiz Tasarımlar</h3>
+                <p>Karmaşık yapılar yerini sade ve odaklanmış tasarımlara bırakıyor. Kullanıcılar artık bilgiyi hızlıca görmek, karmaşadan uzak bir deneyim yaşamak istiyor.</p>
+                <blockquote>"Kullanıcı deneyimi, sadece görsellik değil; aynı zamanda sadelikle de şekillenir."</blockquote>
+                <h3>2. Yapay Zeka Destekli Kişiselleştirme</h3>
+                <p>Web siteleri artık ziyaretçilerin davranışlarını analiz ederek onlara özel içerikler sunabiliyor. Bu da dönüşüm oranlarını ciddi şekilde artırıyor.</p>
+              </div>
+
+              <!-- Durum Çubuğu (Status Bar) -->
+              <div class="editor-status-bar">
+                <span id="editorDomPath">p › span</span>
+                <div class="editor-status-metrics">
+                  <span id="metricLines">Satır: 12</span>
+                  <span id="metricWords">Kelime: 74</span>
+                  <span id="metricChars">Karakter: 540</span>
+                  <span id="metricReadTime">⏱️ 1 dk okuma</span>
+                  <span id="lastSavedTime" style="color: var(--cms-accent);">✓ Otomatik kaydedildi</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======================================================================
+           KOLON 2: SAĞ ORTA ALAN (GÖRSEL EKLEME, BİÇİMLENDİRME & EK ÖZELLİKLER)
+           ====================================================================== -->
+      <div class="col-mid">
+        
+        <!-- KART 1: GÖRSEL EKLEME -->
+        <div class="cms-card" id="mediaSection">
+          <div class="cms-card-header">
+            <h3 class="cms-card-title">
+              <span>🖼️</span> Görsel Ekleme & Kapak
+            </h3>
+          </div>
+
+          <!-- Cihazdan Yükle / URL ile Ekle Tabları -->
+          <div class="segmented-tabs-wrap">
+            <button type="button" class="seg-tab-btn active" id="tabUploadDevice" onclick="switchImageTab('device')">
+              📥 Cihazdan Yükle
+            </button>
+            <button type="button" class="seg-tab-btn" id="tabUploadUrl" onclick="switchImageTab('url')">
+              🔗 URL ile Ekle
+            </button>
+          </div>
+
+          <!-- Yöntem A: Cihazdan Yükle (Drag & Drop) -->
+          <div id="deviceUploadContainer">
+            <div class="drag-drop-zone" id="dropZone" onclick="triggerFileInput()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleFileDrop(event)">
+              <div class="upload-cloud-icon">☁️</div>
+              <div style="font-size: 0.85rem; font-weight: 700; color: var(--cms-text); margin-bottom: 4px;">
+                Dosyaları buraya sürükleyin veya tıklayın
+              </div>
+              <div style="font-size: 0.72rem; color: var(--cms-text-muted);">
+                PNG, JPG, JPEG, WEBP (Maks. 10 MB)
+              </div>
+            </div>
+            <!-- Gizli File Input -->
+            <input type="file" id="mediaFileInput" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
+          </div>
+
+          <!-- Yöntem B: URL ile Ekle -->
+          <div id="urlUploadContainer" style="display: none;">
+            <div style="display: flex; gap: 6px;">
+              <input type="url" id="imageUrlInput" class="cms-input" placeholder="https://example.com/gorsel.jpg" oninput="previewUrlImage(this.value)">
+              <button type="button" class="cms-btn cms-btn-primary" style="padding: 0 1rem;" onclick="applyUrlImage()">
+                Ekle
+              </button>
+            </div>
+          </div>
+
+          <!-- Yüklenen / Seçilen Görsel Önizleme Kutusu -->
+          <div class="uploaded-img-preview-box" id="uploadedPreviewBox" style="display: none;">
+            <img src="" alt="Önizleme" id="activePreviewThumb" class="uploaded-img-thumb">
+            <div class="uploaded-img-meta">
+              <div class="uploaded-img-name" id="activePreviewName">gorsel.jpg</div>
+              <div class="uploaded-img-size" id="activePreviewSize">1.2 MB</div>
+            </div>
+            <button type="button" class="img-remove-btn" onclick="removeActiveImage()" title="Görseli Kaldır">✕</button>
+          </div>
+
+          <!-- Kapak Görseli Olarak / İçeriğe Ekle Butonları -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 1rem;">
+            <button type="button" class="cms-btn cms-btn-secondary" style="font-size: 0.78rem; padding: 0.5rem;" onclick="setAsCoverImage()">
+              ⭐ Kapak Yap
+            </button>
+            <button type="button" class="cms-btn cms-btn-primary" style="font-size: 0.78rem; padding: 0.5rem;" onclick="insertActiveImageIntoEditor()">
+              ➕ İçeriğe Ekle
+            </button>
+          </div>
+
+          <input type="hidden" id="currentCoverImageUrl" value="">
+        </div>
+
+        <!-- KART 2: BİÇİMLENDİRME ARAÇLARI & RENK AYARLARI -->
+        <div class="cms-card">
+          <div class="cms-card-header">
+            <h3 class="cms-card-title">
+              <span>🎨</span> Biçimlendirme Araçları
+            </h3>
+          </div>
+
+          <!-- Hızlı Etiket Butonları -->
+          <div style="display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 1rem;">
+            <button type="button" class="tb-btn" onclick="formatHeading('h1')">H1</button>
+            <button type="button" class="tb-btn" onclick="formatHeading('h2')">H2</button>
+            <button type="button" class="tb-btn" onclick="formatHeading('h3')">H3</button>
+            <button type="button" class="tb-btn" onclick="execCmd('bold')"><b>B</b></button>
+            <button type="button" class="tb-btn" onclick="execCmd('italic')"><i>I</i></button>
+            <button type="button" class="tb-btn" onclick="execCmd('underline')"><u>U</u></button>
+            <button type="button" class="tb-btn" onclick="execCmd('strikeThrough')"><s>S</s></button>
+            <button type="button" class="tb-btn" onclick="execCmd('justifyLeft')">⬅</button>
+            <button type="button" class="tb-btn" onclick="execCmd('justifyCenter')">⬌</button>
+            <button type="button" class="tb-btn" onclick="execCmd('justifyRight')">➡</button>
+          </div>
+
+          <!-- Renk Seçiciler (Yazı Rengi & Arka Plan Rengi) -->
+          <div class="color-swatch-row">
+            <div class="color-picker-item">
+              <label class="cms-label" style="margin-bottom: 0;">Yazı Rengi</label>
+              <div class="color-dot-indicator" id="textColorIndicator" style="background: #0f172a;" title="Metin rengi seç">
+                <input type="color" class="native-color-input" id="nativeTextColor" value="#0f172a" onchange="changeTextColor(this.value)">
+              </div>
+            </div>
+
+            <div class="color-picker-item">
+              <label class="cms-label" style="margin-bottom: 0;">Arka Plan</label>
+              <div class="color-dot-indicator" id="bgColorIndicator" style="background: #ffffff;" title="Vurgu arka plan rengi">
+                <input type="color" class="native-color-input" id="nativeBgColor" value="#ffffff" onchange="changeBgColor(this.value)">
+              </div>
+            </div>
+
+            <div>
+              <select class="tb-select" onchange="execCmd('formatBlock', this.value)">
+                <option value="p">Normal</option>
+                <option value="blockquote">Alıntı</option>
+                <option value="pre">Kod</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- KART 3: EK ÖZELLİKLER (TOGGLES) -->
+        <div class="cms-card">
+          <div class="cms-card-header">
+            <h3 class="cms-card-title">
+              <span>⚙️</span> Ek Özellikler
+            </h3>
+          </div>
+
+          <div class="toggle-row-item">
+            <div class="toggle-label-wrap">
+              <span>⭐</span> Öne Çıkan Yazı
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="toggleFeatured" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="toggle-row-item">
+            <div class="toggle-label-wrap">
+              <span>💬</span> Yorumları Aç
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="toggleComments" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="toggle-row-item">
+            <div class="toggle-label-wrap">
+              <span>🌐</span> SEO Meta Etiketleri
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="toggleSeo" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="toggle-row-item">
+            <div class="toggle-label-wrap">
+              <span>🔗</span> Sosyal Paylaşım Butonları
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="toggleSocial" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ======================================================================
+           KOLON 3: EN SAĞ ALAN (KATEGORİ, YAYIN AYARLARI, GOOGLE SEO ÖNİZLEME)
+           ====================================================================== -->
+      <div class="col-right">
+        
+        <!-- KART 1: KATEGORİ VE ETİKETLER -->
+        <div class="cms-card">
+          <div class="cms-card-header">
+            <h3 class="cms-card-title">
+              <span>🏷️</span> Kategori ve Etiketler
+            </h3>
+          </div>
+
+          <div class="cms-form-group">
+            <label class="cms-label" for="postCategory">Kategori *</label>
+            <select id="postCategory" class="cms-select" onchange="updateSeoPreview()">
+              <option value="custom">⚡ Web Tasarım & Özel Yazılım</option>
+              <option value="saas">🚀 SaaS & Mikro Araçlar</option>
+              <option value="community">👥 Müşteri & Topluluk</option>
+              <option value="engineering">🛠️ Mimari & Kod Felsefesi</option>
+              <option value="ai">🤖 Yapay Zeka & Gelecek</option>
+              <option value="general">💡 Genel Teknoloji</option>
+            </select>
+          </div>
+
+          <div class="cms-form-group">
+            <label class="cms-label">Etiketler</label>
+            <!-- Chip Listesi -->
+            <div class="tag-chips-wrap" id="tagsContainer">
+              <span class="tag-chip">web tasarım <span class="tag-chip-remove" onclick="removeTag(this)">✕</span></span>
+              <span class="tag-chip">trend <span class="tag-chip-remove" onclick="removeTag(this)">✕</span></span>
+              <span class="tag-chip">2025 <span class="tag-chip-remove" onclick="removeTag(this)">✕</span></span>
+              <span class="tag-chip">teknoloji <span class="tag-chip-remove" onclick="removeTag(this)">✕</span></span>
+              <span class="tag-chip">tasarım <span class="tag-chip-remove" onclick="removeTag(this)">✕</span></span>
+            </div>
+            <input type="text" id="newTagInput" class="cms-input" placeholder="Yeni etiket ekle... (Enter)" onkeydown="handleTagKeyDown(event)">
+          </div>
+        </div>
+
+        <!-- KART 2: YAYIN AYARLARI -->
+        <div class="cms-card">
+          <div class="cms-card-header">
+            <h3 class="cms-card-title">
+              <span>📅</span> Yayın Ayarları
+            </h3>
+          </div>
+
+          <div class="cms-form-group">
+            <label class="cms-label" for="postPublishDate">Yayın Tarihi</label>
+            <input type="datetime-local" id="postPublishDate" class="cms-input">
+          </div>
+
+          <div class="cms-form-group">
+            <label class="cms-label" for="postStatus">Durum</label>
+            <select id="postStatus" class="cms-select">
+              <option value="published">🟢 Yayında</option>
+              <option value="draft">🟡 Taslak</option>
+              <option value="scheduled">🔵 Zamanlanmış</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- KART 3: SEO ÖNİZLEME (GOOGLE SERP KARTI) -->
+        <div class="cms-card">
+          <div class="cms-card-header">
+            <h3 class="cms-card-title">
+              <span>🔍</span> SEO Önizleme
+            </h3>
+          </div>
+
+          <!-- Google SERP Görünümü -->
+          <div class="google-serp-preview">
+            <div class="serp-site-info">
+              <div class="serp-favicon">Z</div>
+              <div>ziftstudio.site</div>
+            </div>
+            <div class="serp-url" id="serpUrlDisplay">https://ziftstudio.site/pages/blog-detay.html?slug=web-tasarimda-2025-trendleri</div>
+            <div class="serp-title" id="serpTitleDisplay">Web Tasarımda 2025 Trendleri: Daha Modern, Daha Etkileşimli</div>
+            <div class="serp-snippet" id="serpSnippetDisplay">Dijital dünyada rekabet her geçen gün artarken, web tasarım da bu rekabete ayak uydurmak zorunda. 2025 yılı öne çıkan trendleri...</div>
+          </div>
+
+          <!-- SEO Açıklaması & Karakter Sayacı -->
+          <div class="cms-form-group">
+            <div style="display: flex; justify-content: space-between;">
+              <label class="cms-label" for="seoMetaDesc">Meta Açıklaması</label>
+              <span id="metaDescCount" style="font-size: 0.72rem; color: var(--cms-text-muted);">138 / 160</span>
+            </div>
+            <textarea id="seoMetaDesc" class="cms-textarea" rows="3" placeholder="Arama motorlarında listelenecek çarpıcı özet metin..." oninput="handleMetaDescInput(this.value)">Dijital dünyada rekabet her geçen gün artarken, web tasarım da bu rekabete ayak uydurmak zorunda. 2025 yılı öne çıkan trendleri...</textarea>
+          </div>
+
+          <div class="seo-tip-box">
+            💡 <strong>İpucu:</strong> Daha iyi bir SEO performansı için başlık, açıklama ve anahtar kelime kullanmayı unutmayın.
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+
+    <!-- ==========================================================================
+         4.5 BLOG İÇERİK İSTATİSTİKLERİ VE GÖRÜNTÜLENME ANALİTİĞİ (ANALYTICS SECTION)
+         ========================================================================== -->
+    <section class="posts-manager-section" id="statsSection" style="padding-bottom: 2rem;">
+      <div class="cms-card">
+        <div class="cms-card-header" style="flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <h2 class="cms-card-title">
+              <span>📊</span> Blog İçerik İstatistikleri &amp; Görüntülenme Analitiği
+            </h2>
+            <p style="font-size: 0.8rem; color: var(--cms-text-muted); margin-top: 4px;">
+              Hangi blog içeriğinin kaç kez görüntülendiğini, toplam okunma sayılarını ve popülerlik sıralamasını canlı takip edin.
+            </p>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+            <select id="statsSortSelect" class="cms-select" style="font-size: 0.8rem; padding: 6px 12px; width: auto;" onchange="renderStatsTable()">
+              <option value="views-desc">🔥 En Çok Okunanlar</option>
+              <option value="views-asc">❄️ En Az Okunanlar</option>
+              <option value="newest">🆕 En Yeni Yazılar</option>
+              <option value="title">🔤 Başlığa Göre (A-Z)</option>
+            </select>
+            <button type="button" class="cms-btn cms-btn-secondary" onclick="loadBlogAnalytics(true)" title="İstatistikleri Yenile">
+              Yenile ↻
+            </button>
+          </div>
+        </div>
+
+        <!-- 4 Adet KPI Özet Kartı -->
+        <div class="stats-kpi-grid">
+          <div class="stats-kpi-card">
+            <div class="kpi-icon-wrap" style="background: rgba(37,99,235,0.12); color: #2563eb;">👁️</div>
+            <div class="kpi-content">
+              <div class="kpi-label">Toplam Görüntülenme</div>
+              <div class="kpi-value" id="kpiTotalViews">...</div>
+              <div class="kpi-sub">Tüm blogların toplamı</div>
+            </div>
+          </div>
+
+          <div class="stats-kpi-card">
+            <div class="kpi-icon-wrap" style="background: rgba(16,185,129,0.12); color: #10b981;">📚</div>
+            <div class="kpi-content">
+              <div class="kpi-label">Yayındaki Yazılar</div>
+              <div class="kpi-value" id="kpiTotalPosts">-</div>
+              <div class="kpi-sub">Aktif içerik adedi</div>
+            </div>
+          </div>
+
+          <div class="stats-kpi-card">
+            <div class="kpi-icon-wrap" style="background: rgba(245,158,11,0.12); color: #f59e0b;">🏆</div>
+            <div class="kpi-content">
+              <div class="kpi-label">En Çok Okunan Yazı</div>
+              <div class="kpi-value" id="kpiTopPostViews" style="font-size: 1.15rem;">-</div>
+              <div class="kpi-sub" id="kpiTopPostTitle" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;">-</div>
+            </div>
+          </div>
+
+          <div class="stats-kpi-card">
+            <div class="kpi-icon-wrap" style="background: rgba(139,92,246,0.12); color: #8b5cf6;">⚡</div>
+            <div class="kpi-content">
+              <div class="kpi-label">En Popüler Kategori</div>
+              <div class="kpi-value" id="kpiTopCategory" style="font-size: 1.15rem;">-</div>
+              <div class="kpi-sub" id="kpiTopCategoryViews">-</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- İstatistik Tablosu / Liderlik Sıralaması -->
+        <div id="statsTableContainer">
+          <p style="color: var(--cms-text-muted); font-size: 0.88rem; padding: 1.5rem; text-align: center;">
+            İstatistik verileri hesaplanıyor...
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================================================
+         5. YAYINDAKİ YAZILAR YÖNETİM MERKEZİ (ALT TABLO)
+         ========================================================================== -->
+    <section class="posts-manager-section" id="postsListSection">
+      <div class="cms-card">
+        <div class="cms-card-header">
+          <h2 class="cms-card-title">
+            <span>📚</span> Yayındaki Yazılar (Supabase Veritabanı)
+          </h2>
+          <button type="button" class="cms-btn cms-btn-secondary" onclick="loadExistingPostsTable()">
+            Yenile ↻
+          </button>
+        </div>
+
+        <div id="postsListContainer">
+          <p style="color: var(--cms-text-muted); font-size: 0.88rem; padding: 1.5rem; text-align: center;">
+            Yazılar Supabase'den çekiliyor...
+          </p>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ==========================================================================
+       6. CANLI OKUYUCU ÖNİZLEME MODALI (MODAL DIALOG)
+       ========================================================================== -->
+  <div class="cms-modal-overlay" id="previewModal">
+    <div class="cms-modal-content">
+      <div class="cms-modal-header">
+        <div style="font-weight: 800; font-size: 1.1rem; color: var(--cms-text);">
+          👁️ Gerçek Zamanlı Okuyucu Önizlemesi (blog-detay.html)
+        </div>
+        <button type="button" class="img-remove-btn" onclick="closeLivePreviewModal()">✕</button>
+      </div>
+      <div class="cms-modal-body">
+        
+        <!-- Önizleme İçeriği -->
+        <div style="max-width: 800px; margin: 0 auto;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+            <span class="article-category-badge badge-custom" id="modalCategoryBadge">⚡ Web Tasarım</span>
+            <span style="font-size: 0.8rem; color: var(--cms-text-muted);" id="modalReadTime">⏱️ 3 dk okuma</span>
+          </div>
+
+          <h1 id="modalArticleTitle" style="font-size: 2.2rem; font-weight: 800; line-height: 1.25; margin-bottom: 1.25rem; color: var(--cms-text);"></h1>
+
+          <p id="modalArticleSummary" style="font-size: 1.1rem; line-height: 1.7; color: var(--cms-text-muted); border-left: 3px solid var(--cms-accent); padding-left: 1rem; margin-bottom: 2rem;"></p>
+
+          <img id="modalArticleCover" src="" alt="Kapak" style="width: 100%; height: 350px; object-fit: cover; border-radius: 14px; margin-bottom: 2rem; display: none;">
+
+          <div id="modalArticleBody" style="font-size: 1.05rem; line-height: 1.8; color: var(--cms-text);"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       7. İÇERİK İÇİ GÖRSEL YÖNETİMİ MODALI (MEDYA PANELİ)
+       ========================================================================== -->
+  <div class="cms-modal-overlay" id="imageSettingsModal">
+    <div class="cms-modal-content" style="max-width: 480px;">
+      <div class="cms-modal-header">
+        <div style="font-weight: 800; font-size: 1rem; color: var(--cms-text);">
+          🖼️ İçerik Görseli Ayarları
+        </div>
+        <button type="button" class="img-remove-btn" onclick="closeImageSettingsModal()">✕</button>
+      </div>
+      <div class="cms-modal-body">
+        
+        <div class="cms-form-group">
+          <label class="cms-label">Alt Metin</label>
+          <input type="text" id="imgAltInput" class="cms-input" placeholder="Görsel alt metni (SEO için)">
+        </div>
+
+        <div class="cms-form-group">
+          <label class="cms-label">Genişlik</label>
+          <select id="imgWidthSelect" class="cms-select" onchange="applyImageWidth(this.value)">
+            <option value="100%">%100 (Tam Genişlik)</option>
+            <option value="75%">%75 (Geniş)</option>
+            <option value="50%">%50 (Orta)</option>
+            <option value="25%">%25 (Küçük)</option>
+          </select>
+        </div>
+
+        <div class="cms-form-group">
+          <label class="cms-label">Hizalama</label>
+          <div style="display: flex; gap: 8px;">
+            <button type="button" class="cms-btn cms-btn-secondary" style="flex: 1;" onclick="applyImageAlign('left')">Sol</button>
+            <button type="button" class="cms-btn cms-btn-secondary" style="flex: 1;" onclick="applyImageAlign('center')">Orta</button>
+            <button type="button" class="cms-btn cms-btn-secondary" style="flex: 1;" onclick="applyImageAlign('right')">Sağ</button>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--cms-border);">
+          <button type="button" class="cms-btn" style="color: #ef4444;" onclick="deleteSelectedEditorImage()">
+            Görseli Sil
+          </button>
+          <button type="button" class="cms-btn cms-btn-primary" onclick="closeImageSettingsModal()">
+            Tamam
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Bildirimi -->
+  <div id="cmsToast" style="position: fixed; bottom: 2rem; right: 2rem; background: #0f172a; color: #fff; padding: 0.75rem 1.5rem; border-radius: 30px; font-size: 0.85rem; font-weight: 700; box-shadow: 0 10px 25px rgba(0,0,0,0.3); opacity: 0; transform: translateY(50px); transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); z-index: 999999; pointer-events: none;">
+    ✓ İşlem Başarılı
+  </div>
+
+  <!-- Scriptler -->
+  <script src="../JS/script.js"></script>
+  <script src="../JS/supabase.js"></script>
+
+  <!-- CMS ANA MANTIĞI -->
+  <script>
+    // 1. ŞİFRE GİRİŞ GÜVENLİK YÖNETİMİ
+    const ADMIN_PASSPHRASE = 'zift2025admin';
+    let editingPostId = null; // Düzenleme durumunda dolu olur
+
+    function checkAuthSession() {
+      const isAuthed = sessionStorage.getItem('ziftAdminAuth');
+      if (isAuthed === 'true') {
+        document.getElementById('authOverlay').style.display = 'none';
+        document.getElementById('cmsMainWrapper').style.display = 'flex';
+        loadExistingPostsTable();
+      } else {
+        document.getElementById('authOverlay').style.display = 'flex';
+        document.getElementById('cmsMainWrapper').style.display = 'none';
+      }
+    }
+
+    function handleAdminLogin(e) {
+      e.preventDefault();
+      const entered = document.getElementById('adminPassword').value;
+      if (entered === ADMIN_PASSPHRASE) {
+        sessionStorage.setItem('ziftAdminAuth', 'true');
+        checkAuthSession();
+      } else {
+        document.getElementById('authErrorMsg').style.display = 'block';
+      }
+    }
+
+    function handleAdminLogout() {
+      sessionStorage.removeItem('ziftAdminAuth');
+      window.location.reload();
+    }
+
+    // 2. OTOMATİK SLUG VE PERMALINK ÜRETİCİ
+    let isSlugManual = false;
+
+    function slugify(text) {
+      const trMap = { 'ç':'c', 'Ç':'c', 'ğ':'g', 'Ğ':'g', 'ı':'i', 'I':'i', 'İ':'i', 'ö':'o', 'Ö':'o', 'ş':'s', 'Ş':'s', 'ü':'u', 'Ü':'u' };
+      return text.split('').map(c => trMap[c] || c).join('')
+        .toLowerCase()
+        .replace(/[^a-z0-9 -]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    }
+
+    function handleTitleChange(val) {
+      if (!isSlugManual) {
+        const slug = slugify(val);
+        document.getElementById('postSlug').value = slug;
+        updatePermalinkDisplay(slug);
+      }
+      updateSeoPreview();
+      updateMetrics();
+      scheduleAutoSave();
+    }
+
+    function toggleSlugManual() {
+      const slugInput = document.getElementById('postSlug');
+      isSlugManual = !isSlugManual;
+      slugInput.readOnly = !isSlugManual;
+      if (isSlugManual) {
+        slugInput.focus();
+        showToast('Slug serbest düzenlemeye açıldı.');
+      } else {
+        handleTitleChange(document.getElementById('postTitle').value);
+      }
+    }
+
+    function updatePermalinkDisplay(slug) {
+      const fullUrl = `https://ziftstudio.site/pages/blog-detay.html?slug=${slug || 'yazi-slug'}`;
+      document.getElementById('permalinkFullDisplay').textContent = fullUrl;
+      document.getElementById('serpUrlDisplay').textContent = fullUrl;
+    }
+
+    function copyPermalinkUrl() {
+      const url = document.getElementById('permalinkFullDisplay').textContent;
+      navigator.clipboard.writeText(url).then(() => {
+        showToast('✓ Permalink URL panoya kopyalandı!');
+      });
+    }
+
+    // 3. GELİŞMİŞ RICH TEXT EDİTÖR İŞLEMLERİ (WYSIWYG)
+    function execCmd(command, value = null) {
+      document.execCommand(command, false, value);
+      document.getElementById('editorCanvas').focus();
+      updateMetrics();
+      scheduleAutoSave();
+    }
+
+    function formatHeading(tag) {
+      if (tag === 'p') {
+        document.execCommand('formatBlock', false, '<p>');
+      } else {
+        document.execCommand('formatBlock', false, `<${tag}>`);
+      }
+      document.getElementById('editorCanvas').focus();
+      updateMetrics();
+    }
+
+    function clearFormatting() {
+      document.execCommand('removeFormat', false, null);
+    }
+
+    function insertLinkDialog() {
+      const url = prompt('Bağlantı URL adresini girin:', 'https://');
+      if (url) execCmd('createLink', url);
+    }
+
+    function insertVideoDialog() {
+      const embed = prompt('YouTube veya video embed URL adresini girin:');
+      if (embed) {
+        const html = `<div style="position:relative;padding-bottom:56.25%;height:0;margin:1.5rem 0;"><iframe src="${embed}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;border-radius:12px;" allowfullscreen></iframe></div><p></p>`;
+        document.execCommand('insertHTML', false, html);
+      }
+    }
+
+    function insertCodeBlock() {
+      const html = `<pre><code>// Kod bloğu buraya gelecek...</code></pre><p></p>`;
+      document.execCommand('insertHTML', false, html);
+    }
+
+    function insertBlockquote() {
+      const html = `<blockquote>"Önemli bir alıntı veya vaka içgörüsü buraya gelir..."</blockquote><p></p>`;
+      document.execCommand('insertHTML', false, html);
+    }
+
+    function insertHorizontalRule() {
+      execCmd('insertHorizontalRule');
+    }
+
+    function insertTableDialog() {
+      const rows = prompt('Satır sayısı:', '3');
+      const cols = prompt('Sütun sayısı:', '3');
+      if (rows && cols) {
+        let tableHtml = '<table><tbody>';
+        for (let r = 0; r < parseInt(rows); r++) {
+          tableHtml += '<tr>';
+          for (let c = 0; c < parseInt(cols); c++) {
+            tableHtml += r === 0 ? '<th>Başlık</th>' : '<td>Hücre</td>';
+          }
+          tableHtml += '</tr>';
+        }
+        tableHtml += '</tbody></table><p></p>';
+        document.execCommand('insertHTML', false, tableHtml);
+      }
+    }
+
+    function changeTextColor(color) {
+      execCmd('foreColor', color);
+      document.getElementById('textColorIndicator').style.backgroundColor = color;
+    }
+
+    function changeBgColor(color) {
+      execCmd('hiliteColor', color);
+      document.getElementById('bgColorIndicator').style.backgroundColor = color;
+    }
+
+    // 4. KELİME, KARAKTER, SATIR & OKUMA SÜRESİ
+    function updateMetrics() {
+      const canvas = document.getElementById('editorCanvas');
+      const text = canvas.innerText || '';
+      const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+      const chars = text.length;
+      const lines = text.split('\n').filter(l => l.trim().length > 0).length || 1;
+      const readMin = Math.max(1, Math.ceil(words / 200));
+
+      document.getElementById('metricWords').textContent = `Kelime: ${words}`;
+      document.getElementById('metricChars').textContent = `Karakter: ${chars}`;
+      document.getElementById('metricLines').textContent = `Satır: ${lines}`;
+      document.getElementById('metricReadTime').textContent = `⏱️ ${readMin} dk okuma`;
+    }
+
+    function handleEditorInput() {
+      updateMetrics();
+      updateSeoPreview();
+      scheduleAutoSave();
+    }
+
+    // 5. GÖRSEL YÖNETİMİ (CİHAZDAN VEYA URL İLE)
+    let currentActiveImageUrl = '';
+
+    function switchImageTab(tab) {
+      document.getElementById('tabUploadDevice').classList.toggle('active', tab === 'device');
+      document.getElementById('tabUploadUrl').classList.toggle('active', tab === 'url');
+      document.getElementById('deviceUploadContainer').style.display = tab === 'device' ? 'block' : 'none';
+      document.getElementById('urlUploadContainer').style.display = tab === 'url' ? 'block' : 'none';
+    }
+
+    function triggerFileInput() {
+      document.getElementById('mediaFileInput').click();
+    }
+
+    function handleFileSelect(e) {
+      const file = e.target.files[0];
+      if (file) processLocalImage(file);
+    }
+
+    function handleDragOver(e) {
+      e.preventDefault();
+      document.getElementById('dropZone').classList.add('dragover');
+    }
+
+    function handleDragLeave(e) {
+      document.getElementById('dropZone').classList.remove('dragover');
+    }
+
+    function handleFileDrop(e) {
+      e.preventDefault();
+      document.getElementById('dropZone').classList.remove('dragover');
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        processLocalImage(e.dataTransfer.files[0]);
+      }
+    }
+
+    function processLocalImage(file) {
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        currentActiveImageUrl = evt.target.result;
+        displayActivePreview(file.name, (file.size / (1024 * 1024)).toFixed(2) + ' MB', currentActiveImageUrl);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function applyUrlImage() {
+      const url = document.getElementById('imageUrlInput').value.trim();
+      if (!url) return;
+      currentActiveImageUrl = url;
+      displayActivePreview('URL Görseli', 'Uzak Sunucu', url);
+    }
+
+    function displayActivePreview(name, size, src) {
+      const box = document.getElementById('uploadedPreviewBox');
+      document.getElementById('activePreviewName').textContent = name;
+      document.getElementById('activePreviewSize').textContent = size;
+      document.getElementById('activePreviewThumb').src = src;
+      box.style.display = 'flex';
+      showToast('Görsel hazırlandı.');
+    }
+
+    function removeActiveImage() {
+      currentActiveImageUrl = '';
+      document.getElementById('uploadedPreviewBox').style.display = 'none';
+      document.getElementById('imageUrlInput').value = '';
+    }
+
+    function setAsCoverImage() {
+      if (!currentActiveImageUrl) {
+        alert('Lütfen önce bir görsel yükleyin veya URL girin.');
+        return;
+      }
+      document.getElementById('currentCoverImageUrl').value = currentActiveImageUrl;
+      showToast('⭐ Kapak görseli olarak ayarlandı!');
+    }
+
+    function insertActiveImageIntoEditor() {
+      if (!currentActiveImageUrl) {
+        alert('Lütfen önce bir görsel yükleyin veya URL girin.');
+        return;
+      }
+      const imgHtml = `<img src="${currentActiveImageUrl}" alt="Blog görseli" style="width:100%; border-radius:12px; margin:1rem 0;" /><p></p>`;
+      document.execCommand('insertHTML', false, imgHtml);
+      showToast('➕ Görsel içeriğe eklendi!');
+    }
+
+    // İçerik içi görsellere tıklayınca ayar modalı açma
+    let currentlySelectedImg = null;
+    document.getElementById('editorCanvas').addEventListener('click', (e) => {
+      if (e.target.tagName === 'IMG') {
+        document.querySelectorAll('.editable-canvas img').forEach(i => i.classList.remove('selected-img'));
+        e.target.classList.add('selected-img');
+        currentlySelectedImg = e.target;
+        openImageSettingsModal(e.target);
+      }
+    });
+
+    function openImageSettingsModal(imgEl) {
+      document.getElementById('imgAltInput').value = imgEl.alt || '';
+      document.getElementById('imageSettingsModal').style.display = 'flex';
+    }
+
+    function closeImageSettingsModal() {
+      if (currentlySelectedImg) {
+        currentlySelectedImg.alt = document.getElementById('imgAltInput').value;
+      }
+      document.getElementById('imageSettingsModal').style.display = 'none';
+    }
+
+    function applyImageWidth(width) {
+      if (currentlySelectedImg) currentlySelectedImg.style.width = width;
+    }
+
+    function applyImageAlign(align) {
+      if (!currentlySelectedImg) return;
+      if (align === 'center') {
+        currentlySelectedImg.style.display = 'block';
+        currentlySelectedImg.style.marginLeft = 'auto';
+        currentlySelectedImg.style.marginRight = 'auto';
+      } else if (align === 'left') {
+        currentlySelectedImg.style.display = 'inline-block';
+        currentlySelectedImg.style.float = 'left';
+        currentlySelectedImg.style.marginRight = '1rem';
+      } else if (align === 'right') {
+        currentlySelectedImg.style.display = 'inline-block';
+        currentlySelectedImg.style.float = 'right';
+        currentlySelectedImg.style.marginLeft = '1rem';
+      }
+    }
+
+    function deleteSelectedEditorImage() {
+      if (currentlySelectedImg) {
+        currentlySelectedImg.remove();
+        currentlySelectedImg = null;
+        closeImageSettingsModal();
+        showToast('Görsel silindi.');
+      }
+    }
+
+    // 6. ETİKETLER (TAGS) SİSTEMİ
+    function handleTagKeyDown(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const val = e.target.value.trim();
+        if (val) {
+          addTagChip(val);
+          e.target.value = '';
+        }
+      }
+    }
+
+    function addTagChip(tagText) {
+      const container = document.getElementById('tagsContainer');
+      const chip = document.createElement('span');
+      chip.className = 'tag-chip';
+      chip.innerHTML = `${escapeHtml(tagText)} <span class="tag-chip-remove" onclick="removeTag(this)">✕</span>`;
+      container.appendChild(chip);
+    }
+
+    function removeTag(el) {
+      el.parentElement.remove();
+    }
+
+    function getAllTags() {
+      const tags = [];
+      document.querySelectorAll('#tagsContainer .tag-chip').forEach(chip => {
+        tags.push(chip.childNodes[0].textContent.trim());
+      });
+      return tags;
+    }
+
+    // 7. SEO ÖNİZLEME & META GÜNCELLEME
+    function handleMetaDescInput(val) {
+      document.getElementById('metaDescCount').textContent = `${val.length} / 160`;
+      document.getElementById('serpSnippetDisplay').textContent = val || 'Arama motoru açıklaması...';
+      scheduleAutoSave();
+    }
+
+    function updateSeoPreview() {
+      const title = document.getElementById('postTitle').value.trim() || 'Yazı Başlığı...';
+      const slug = document.getElementById('postSlug').value.trim() || 'yazi-slug';
+      document.getElementById('serpTitleDisplay').textContent = title;
+      document.getElementById('serpUrlDisplay').textContent = `https://ziftstudio.site/pages/blog-detay.html?slug=${slug}`;
+    }
+
+    // 8. CANLI OKUYUCU ÖNİZLEME MODALI
+    function openLivePreviewModal() {
+      const title = document.getElementById('postTitle').value || 'Başlık Yok';
+      const summary = document.getElementById('seoMetaDesc').value || '';
+      const content = document.getElementById('editorCanvas').innerHTML;
+      const cover = document.getElementById('currentCoverImageUrl').value || currentActiveImageUrl;
+      const cat = document.getElementById('postCategory').value;
+
+      document.getElementById('modalArticleTitle').textContent = title;
+      document.getElementById('modalArticleSummary').textContent = summary;
+      document.getElementById('modalArticleBody').innerHTML = content;
+
+      const coverImg = document.getElementById('modalArticleCover');
+      if (cover) {
+        coverImg.src = cover;
+        coverImg.style.display = 'block';
+      } else {
+        coverImg.style.display = 'none';
+      }
+
+      document.getElementById('previewModal').style.display = 'flex';
+    }
+
+    function closeLivePreviewModal() {
+      document.getElementById('previewModal').style.display = 'none';
+    }
+
+    // 9. OTOMATİK TASLAK KAYDI (LOCALSTORAGE & TIMERS)
+    let autoSaveTimer = null;
+    function scheduleAutoSave() {
+      clearTimeout(autoSaveTimer);
+      autoSaveTimer = setTimeout(saveLocalDraft, 3000);
+    }
+
+    function saveLocalDraft() {
+      const draft = {
+        title: document.getElementById('postTitle').value,
+        slug: document.getElementById('postSlug').value,
+        summary: document.getElementById('seoMetaDesc').value,
+        content: document.getElementById('editorCanvas').innerHTML,
+        category: document.getElementById('postCategory').value,
+        cover: document.getElementById('currentCoverImageUrl').value || currentActiveImageUrl,
+        timestamp: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
+      };
+      localStorage.setItem('ziftBlogDraft', JSON.stringify(draft));
+      document.getElementById('lastSavedTime').textContent = `✓ Son kaydedildi: ${draft.timestamp}`;
+    }
+
+    function handleSaveDraft() {
+      saveLocalDraft();
+      showToast('💾 Taslak yerel olarak kaydedildi!');
+    }
+
+    // 10. SUPABASE'E YAYINLAMA / GÜNCELLEME (PUBLISH POST)
+    async function handlePublishPost() {
+      const publishBtn = document.getElementById('publishBtn');
+      const title = document.getElementById('postTitle').value.trim();
+      const slug = document.getElementById('postSlug').value.trim();
+      const category = document.getElementById('postCategory').value;
+      const summary = document.getElementById('seoMetaDesc').value.trim();
+      const content = document.getElementById('editorCanvas').innerHTML.trim();
+      const cover = document.getElementById('currentCoverImageUrl').value || currentActiveImageUrl || '../assets/image/randevu/randevu-1.png';
+      
+      const words = (document.getElementById('editorCanvas').innerText || '').trim().split(/\s+/).length;
+      const read_time = `${Math.max(1, Math.ceil(words / 200))} dk okuma`;
+
+      if (!title || !slug || !content) {
+        alert('Lütfen başlık, slug ve içerik alanlarını eksiksiz doldurun.');
+        return;
+      }
+
+      try {
+        publishBtn.disabled = true;
+        publishBtn.innerHTML = '⏳ Supabase\'e Aktarılıyor...';
+
+        if (!window.BlogService) {
+          throw new Error('BlogService bulunamadı. JS/supabase.js dosyasını kontrol edin.');
+        }
+
+        const postPayload = {
+          title,
+          slug,
+          summary,
+          content,
+          category,
+          image_url: cover,
+          read_time
+        };
+
+        if (editingPostId) {
+          // Güncelleme Modu
+          await window.BlogService.updatePost(editingPostId, postPayload);
+          showToast('✅ Blog yazısı başarıyla güncellendi!');
+        } else {
+          // Yeni Oluşturma Modu
+          await window.BlogService.createPost(postPayload);
+          showToast('🚀 Blog yazısı başarıyla yayınlandı!');
+        }
+
+        // Listeyi ve istatistikleri yenile
+        loadExistingPostsTable();
+        loadBlogAnalytics(true);
+
+        // 1 saniye sonra detay sayfasına bakma opsiyonu sun
+        setTimeout(() => {
+          if (confirm('Yazı yayınlandı! Şimdi canlı detay sayfasında görüntülemek ister misiniz?')) {
+            window.open(`blog-detay.html?slug=${encodeURIComponent(slug)}`, '_blank');
+          }
+        }, 800);
+
+      } catch (err) {
+        console.error('Yayınlama hatası:', err);
+        alert('Yayınlanamadı: ' + (err.message || 'Supabase bağlantı hatası.'));
+      } finally {
+        publishBtn.disabled = false;
+        publishBtn.innerHTML = '🚀 Yazıyı Yayınla';
+      }
+    }
+
+    // 11. VERİTABANINDAKİ YAZILAR TABLOSU (DÜZENLE / SİL / GÖRÜNTÜLENME)
+    async function loadExistingPostsTable() {
+      const container = document.getElementById('postsListContainer');
+      try {
+        if (!window.BlogService) return;
+        const posts = await window.BlogService.getPosts({ limit: 50 });
+
+        // İstatistikleri de senkronize yükle
+        loadBlogAnalytics();
+
+        if (!posts || posts.length === 0) {
+          container.innerHTML = '<p style="color: var(--cms-text-muted); font-size: 0.88rem; padding: 1.5rem; text-align: center;">Henüz kayıtlı bir blog yazısı yok.</p>';
+          return;
+        }
+
+        container.innerHTML = posts.map(post => {
+          const date = new Date(post.created_at).toLocaleDateString('tr-TR');
+          const views = post.views || 0;
+          return `
+            <div class="post-table-row">
+              <div style="flex: 1; min-width: 0; padding-right: 1rem;">
+                <div style="font-weight: 700; font-size: 0.95rem; color: var(--cms-text); margin-bottom: 4px;">
+                  ${escapeHtml(post.title)}
+                </div>
+                <div style="font-size: 0.78rem; color: var(--cms-text-muted); display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                  <span>🏷️ ${escapeHtml(post.category)}</span>
+                  <span>📅 ${date}</span>
+                  <span style="font-weight: 700; color: var(--cms-accent); display: inline-flex; align-items: center; gap: 4px; background: rgba(37,99,235,0.08); padding: 2px 8px; border-radius: 999px;">
+                    👁️ ${views.toLocaleString('tr-TR')} görüntülenme
+                  </span>
+                  <span style="font-family: var(--font-mono, monospace);">🔗 ${escapeHtml(post.slug)}</span>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <button type="button" class="cms-btn cms-btn-secondary" style="font-size: 0.75rem; padding: 5px 10px;" onclick="loadPostIntoEditor('${post.slug}')">
+                  ✏️ Düzenle
+                </button>
+                <a href="blog-detay.html?slug=${encodeURIComponent(post.slug)}" target="_blank" class="cms-btn cms-btn-secondary" style="font-size: 0.75rem; padding: 5px 10px; text-decoration: none;">
+                  Görüntüle ↗
+                </a>
+                <button type="button" class="cms-btn" style="font-size: 0.75rem; padding: 5px 10px; color: #ef4444; background: rgba(239,68,68,0.08);" onclick="handleDeletePost('${post.id}', '${escapeHtml(post.title)}')">
+                  Sil ✕
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+      } catch (err) {
+        container.innerHTML = `<p style="color: #ef4444; padding: 1.5rem; font-size: 0.85rem;">Yazılar yüklenemedi: ${err.message}</p>`;
+      }
+    }
+
+    // 12. BLOG İSTATİSTİKLERİ VE GÖRÜNTÜLENME ANALİTİĞİ MOTORU
+    let currentBlogStats = null;
+
+    async function loadBlogAnalytics(force = false) {
+      const statsContainer = document.getElementById('statsTableContainer');
+      try {
+        if (!window.BlogService) return;
+        
+        const stats = await window.BlogService.getBlogStats();
+        currentBlogStats = stats;
+
+        // KPI kartlarını doldur
+        const totalViewsEl = document.getElementById('kpiTotalViews');
+        if (totalViewsEl) totalViewsEl.textContent = stats.totalViews.toLocaleString('tr-TR');
+
+        const totalPostsEl = document.getElementById('kpiTotalPosts');
+        if (totalPostsEl) totalPostsEl.textContent = `${stats.totalPosts} Yazı`;
+
+        const topPostViewsEl = document.getElementById('kpiTopPostViews');
+        const topPostTitleEl = document.getElementById('kpiTopPostTitle');
+        if (stats.mostViewedPost) {
+          if (topPostViewsEl) topPostViewsEl.textContent = `👁️ ${(stats.mostViewedPost.views || 0).toLocaleString('tr-TR')}`;
+          if (topPostTitleEl) {
+            topPostTitleEl.textContent = stats.mostViewedPost.title;
+            topPostTitleEl.title = stats.mostViewedPost.title;
+          }
+        } else {
+          if (topPostViewsEl) topPostViewsEl.textContent = '-';
+          if (topPostTitleEl) topPostTitleEl.textContent = 'Henüz veri yok';
+        }
+
+        const topCatEl = document.getElementById('kpiTopCategory');
+        const topCatViewsEl = document.getElementById('kpiTopCategoryViews');
+        if (topCatEl) {
+          const catLabels = {
+            custom: 'Özel Yazılım',
+            saas: 'SaaS Araçları',
+            community: 'Müşteri & Topluluk',
+            engineering: 'Mimari & Kod',
+            ai: 'Yapay Zeka',
+            general: 'Genel'
+          };
+          topCatEl.textContent = catLabels[stats.topCategory] || stats.topCategory;
+        }
+        if (topCatViewsEl && stats.topCategoryViews >= 0) {
+          topCatViewsEl.textContent = `Toplam ${stats.topCategoryViews.toLocaleString('tr-TR')} okunma`;
+        }
+
+        renderStatsTable();
+
+        if (force) {
+          showToast('📊 İstatistikler güncellendi!');
+        }
+      } catch (err) {
+        console.error('İstatistik yükleme hatası:', err);
+        if (statsContainer) {
+          statsContainer.innerHTML = `<p style="color: #ef4444; padding: 1rem; font-size: 0.85rem;">İstatistikler hesaplanırken hata oluştu: ${err.message}</p>`;
+        }
+      }
+    }
+
+    function renderStatsTable() {
+      if (!currentBlogStats || !currentBlogStats.posts) return;
+      const container = document.getElementById('statsTableContainer');
+      const sortSelect = document.getElementById('statsSortSelect');
+      const sortMode = sortSelect ? sortSelect.value : 'views-desc';
+
+      let posts = [...currentBlogStats.posts];
+
+      if (sortMode === 'views-desc') {
+        posts.sort((a, b) => (b.views || 0) - (a.views || 0));
+      } else if (sortMode === 'views-asc') {
+        posts.sort((a, b) => (a.views || 0) - (b.views || 0));
+      } else if (sortMode === 'newest') {
+        posts.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      } else if (sortMode === 'title') {
+        posts.sort((a, b) => (a.title || '').localeCompare(b.title || '', 'tr'));
+      }
+
+      if (posts.length === 0) {
+        container.innerHTML = '<p style="color: var(--cms-text-muted); font-size: 0.88rem; padding: 1.5rem; text-align: center;">Henüz kayıtlı bir blog yazısı yok.</p>';
+        return;
+      }
+
+      const maxViews = Math.max(...posts.map(p => p.views || 0), 1);
+
+      container.innerHTML = posts.map((post, idx) => {
+        const views = post.views || 0;
+        const percentage = Math.max(8, Math.round((views / maxViews) * 100));
+        const date = new Date(post.created_at).toLocaleDateString('tr-TR');
+        
+        let rankClass = '';
+        let rankDisplay = `#${idx + 1}`;
+        if (sortMode === 'views-desc') {
+          if (idx === 0) { rankClass = 'rank-1'; rankDisplay = '🥇 1'; }
+          else if (idx === 1) { rankClass = 'rank-2'; rankDisplay = '🥈 2'; }
+          else if (idx === 2) { rankClass = 'rank-3'; rankDisplay = '🥉 3'; }
+        }
+
+        return `
+          <div class="stats-table-row">
+            <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0;">
+              <span class="stats-rank-badge ${rankClass}">${rankDisplay}</span>
+              <div style="flex: 1; min-width: 0;">
+                <div style="font-weight: 700; font-size: 0.95rem; color: var(--cms-text); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(post.title)}">
+                  ${escapeHtml(post.title)}
+                </div>
+                <div style="font-size: 0.75rem; color: var(--cms-text-muted); display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                  <span>🏷️ ${escapeHtml(post.category)}</span>
+                  <span>📅 ${date}</span>
+                  <span style="font-family: var(--font-mono, monospace); font-size: 0.72rem; opacity: 0.8;">🔗 ${escapeHtml(post.slug)}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Görüntülenme Göstergesi & Progress Bar -->
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 3px;">
+                <span class="views-pill-badge">
+                  👁️ ${views.toLocaleString('tr-TR')} görüntülenme
+                </span>
+                <div class="views-bar-wrap" title="En çok okunan yazıya göre oran: %${percentage}">
+                  <div class="views-bar-fill" style="width: ${percentage}%;"></div>
+                </div>
+              </div>
+
+              <!-- İşlemler -->
+              <div style="display: flex; align-items: center; gap: 6px; margin-left: 8px;">
+                <button type="button" class="cms-btn cms-btn-secondary" style="font-size: 0.75rem; padding: 5px 10px;" onclick="loadPostIntoEditor('${post.slug}')" title="Bu Yazıyı Düzenle">
+                  ✏️ Düzenle
+                </button>
+                <a href="blog-detay.html?slug=${encodeURIComponent(post.slug)}" target="_blank" class="cms-btn cms-btn-secondary" style="font-size: 0.75rem; padding: 5px 10px; text-decoration: none;" title="Canlı Yazıyı Aç">
+                  Görüntüle ↗
+                </a>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function scrollToStatsSection() {
+      const statsEl = document.getElementById('statsSection');
+      if (statsEl) {
+        statsEl.scrollIntoView({ behavior: 'smooth' });
+        loadBlogAnalytics();
+      }
+    }
+
+    function scrollToEditor() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    async function loadPostIntoEditor(slug) {
+      try {
+        const post = await window.BlogService.getPostBySlug(slug);
+        if (!post) return;
+
+        editingPostId = post.id;
+        document.getElementById('formCardTitle').textContent = `✏️ Yazıyı Düzenle: ${post.title}`;
+        document.getElementById('postTitle').value = post.title;
+        document.getElementById('postSlug').value = post.slug;
+        updatePermalinkDisplay(post.slug);
+        
+        document.getElementById('postCategory').value = post.category || 'general';
+        document.getElementById('seoMetaDesc').value = post.summary || '';
+        document.getElementById('editorCanvas').innerHTML = post.content || '';
+        
+        if (post.image_url) {
+          document.getElementById('currentCoverImageUrl').value = post.image_url;
+          displayActivePreview('Kapak Görseli', 'Supabase', post.image_url);
+        }
+
+        updateMetrics();
+        updateSeoPreview();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        showToast('Yazı editöre yüklendi!');
+      } catch (err) {
+        alert('Yazı yüklenirken hata oluştu.');
+      }
+    }
+
+    async function handleDeletePost(id, title) {
+      if (!confirm(`"${title}" başlıklı yazıyı silmek istediğinizden emin misiniz?`)) return;
+      try {
+        await window.BlogService.deletePost(id);
+        showToast('Yazı başarıyla silindi.');
+        loadExistingPostsTable();
+        loadBlogAnalytics(true);
+      } catch (err) {
+        alert('Hata: ' + err.message);
+      }
+    }
+
+    function scrollToPostsList() {
+      document.getElementById('postsListSection').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function toggleMobileSidebar() {
+      document.getElementById('cmsSidebar').classList.toggle('mobile-open');
+    }
+
+    function toggleTheme() {
+      const current = document.body.getAttribute('data-theme') || 'light';
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.body.setAttribute('data-theme', next);
+      document.getElementById('themeIcon').textContent = next === 'dark' ? '🌙' : '☀️';
+      localStorage.setItem('ziftTheme', next);
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('cmsToast');
+      t.textContent = msg;
+      t.style.opacity = '1';
+      t.style.transform = 'translateY(0)';
+      setTimeout(() => {
+        t.style.opacity = '0';
+        t.style.transform = 'translateY(50px)';
+      }, 3000);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // Başlangıç Yükleyicisi
+    document.addEventListener('DOMContentLoaded', () => {
+      // Tema yükle
+      const savedTheme = localStorage.getItem('ziftTheme') || 'light';
+      document.body.setAttribute('data-theme', savedTheme);
+      document.getElementById('themeIcon').textContent = savedTheme === 'dark' ? '🌙' : '☀️';
+
+      // Bugünün tarihini yayın tarihine default ata
+      const now = new Date();
+      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+      document.getElementById('postPublishDate').value = now.toISOString().slice(0, 16);
+
+      // Auth kontrolü
+      checkAuthSession();
+      updateMetrics();
+      updateSeoPreview();
+    });
+  </script>
+</body>
+</html>

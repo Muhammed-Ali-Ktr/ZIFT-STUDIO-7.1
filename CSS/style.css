@@ -2274,6 +2274,50 @@ body[data-theme="dark"] .form-submit:hover {
   background: #f1f5f9;
 }
 
+.form-submit:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* İletişim Formu Başarı / Hata Bildirim Kutusu */
+.form-status-alert {
+  padding: 1rem 1.25rem;
+  border-radius: var(--radius-md);
+  font-size: 0.88rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  line-height: 1.5;
+  transition: all 0.3s ease;
+}
+
+.form-status-alert.success {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #059669;
+}
+
+.form-status-alert.error {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #dc2626;
+}
+
+body[data-theme="dark"] .form-status-alert.success {
+  background: rgba(16, 185, 129, 0.18);
+  border-color: rgba(16, 185, 129, 0.45);
+  color: #34d399;
+}
+
+body[data-theme="dark"] .form-status-alert.error {
+  background: rgba(239, 68, 68, 0.18);
+  border-color: rgba(239, 68, 68, 0.45);
+  color: #f87171;
+}
+
 /* --------------------------------------------------------------------------
    15. FOOTER
    -------------------------------------------------------------------------- */
@@ -3542,6 +3586,7 @@ body[data-theme="dark"] .article-category-badge.badge-engineering {
   color: var(--text);
   cursor: pointer;
   width: 100%;
+  text-decoration: none;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -4011,7 +4056,10 @@ body[data-theme="dark"] .nav-cta {
   transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.reveal.visible {
+.reveal.visible,
+.reveal.active,
+.article-card.reveal,
+.blog-card.reveal {
   opacity: 1;
   transform: translateY(0);
 }
@@ -4072,6 +4120,9 @@ body[data-theme="dark"] .nav-cta {
     grid-template-columns: 1fr;
     gap: 1.25rem;
   }
+  .hero-right {
+    order: 1;
+  }
 }
 
 @media (max-width: 540px) {
@@ -4103,7 +4154,9 @@ body[data-theme="dark"] .nav-cta {
     grid-template-columns: 1fr;
   }
   .hero-avatar-wrapper {
-    height: 340px;
+    width: 88%;
+    height: 250px;
+    margin: 0 auto;
   }
   .hero-float-badge {
     left: 0px;
@@ -5159,26 +5212,61 @@ body[data-theme="dark"] .modal-link {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  width: 44px;
-  height: 44px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(15, 23, 42, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.35);
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
+  font-size: 1.85rem;
+  font-weight: 300;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 10;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  user-select: none;
 }
 
 .qr-lightbox-arrow:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: #ffffff;
+  color: #0f172a;
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
 }
 
-.qr-lightbox-arrow.prev { left: 1rem; }
-.qr-lightbox-arrow.next { right: 1rem; }
+.qr-lightbox-arrow.prev { left: 1.25rem; }
+.qr-lightbox-arrow.next { right: 1.25rem; }
+
+@media (max-width: 640px) {
+  .qr-lightbox-arrow {
+    width: 42px;
+    height: 42px;
+    font-size: 1.4rem;
+  }
+  .qr-lightbox-arrow.prev { left: 0.65rem; }
+  .qr-lightbox-arrow.next { right: 0.65rem; }
+}
+
+/* Blog Görselleri Zoom & Etkileşim Efekti */
+.detail-body img,
+.article-content img,
+.article-cover-wrap img,
+#postCoverImage {
+  cursor: zoom-in;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.detail-body img:hover,
+.article-content img:hover,
+#postCoverImage:hover {
+  transform: scale(1.015);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
 
 .qr-lightbox-caption {
   margin-top: 1rem;

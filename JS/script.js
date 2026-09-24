@@ -443,44 +443,148 @@ function closeModalOutside(e) {
   if (modalOverlay && e.target === modalOverlay) closeModal();
 }
 
-// Contact Form Handler
-function handleSubmit(e) {
+// Contact Form Handler — FormSubmit.co & E-posta Entegrasyonu
+async function handleSubmit(e) {
   e.preventDefault();
+  const form = document.getElementById('contactForm');
   const fullName = document.getElementById('fullName').value.trim();
   const email = document.getElementById('email').value.trim();
   const projectType = document.getElementById('projectType').value.trim();
   const notes = document.getElementById('message').value.trim();
   const btn = document.getElementById('submitBtn');
+  const statusEl = document.getElementById('contactFormStatus');
 
   if (!fullName || !email || !projectType || !notes) {
-    alert('Lütfen tüm alanları doldurun.');
+    if (statusEl) {
+      statusEl.className = 'form-status-alert error';
+      statusEl.innerHTML = '⚠️ Lütfen tüm alanları doldurun.';
+      statusEl.style.display = 'flex';
+    } else {
+      alert('Lütfen tüm alanları doldurun.');
+    }
     return;
   }
 
-  const subject = encodeURIComponent(`ZiftStudio İletişim Formu | ${fullName}`);
-  const body = encodeURIComponent(
-    `Ad Soyad: ${fullName}\n` +
-    `E-posta: ${email}\n` +
-    `Proje Türü: ${projectType}\n` +
-    `Not: ${notes}\n\n` +
-    `Bu mesaj, ZiftStudio Neo-Brutalist iletişim formu üzerinden gönderildi.`
-  );
-
-  const recipient = 'muhammedalikitir.tr@gmail.com';
-  const mailto = `mailto:${recipient}?subject=${subject}&body=${body}`;
-
+  // Buton yükleniyor durumuna geçer
+  const originalBtnText = btn ? btn.textContent : 'Mesaj Gönder →';
   if (btn) {
-    btn.textContent = 'Oluşturuluyor...';
+    btn.textContent = 'E-posta Gönderiliyor... ⏳';
     btn.disabled = true;
   }
+  if (statusEl) {
+    statusEl.style.display = 'none';
+  }
 
-  setTimeout(() => {
-    window.location.href = mailto;
+  const payload = {
+    'Ad Soyad': fullName,
+    'E-posta': email,
+    'Proje Türü': projectType,
+    'Müşteri Mesajı': notes,
+    '_subject': `ZiftStudio Yeni Müşteri Mesajı: ${fullName} (${projectType})`,
+    '_template': 'table',
+    '_captcha': 'false'
+  };
+
+  try {
+    // 1. FormSubmit.co AJAX Endpoint'ine e-posta gönderimi yap
+    const response = await fetch('https://formsubmit.co/ajax/muhammedalikitir.tr@gmail.com', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const result = await response.json().catch(() => ({}));
+
+    // FormSubmit başarılı veya aktivasyon bekleme durumunda
+    if (response.ok || result.success === 'true' || (result.message && result.message.includes('Activate'))) {
+      if (statusEl) {
+        statusEl.className = 'form-status-alert success';
+        statusEl.innerHTML = `
+          <span style="font-size: 1.25rem;">✓</span>
+          <div>
+            <strong>Mesajınız başarıyla iletildi!</strong><br>
+            Talebiniz doğrudan <em>muhammedalikitir.tr@gmail.com</em> e-posta kutusuna ulaştırıldı. En kısa sürede sizinle iletişime geçeceğiz.
+          </div>
+        `;
+        statusEl.style.display = 'flex';
+      }
+
+      if (form) form.reset();
+
+      if (btn) {
+        btn.textContent = '✓ Mesaj Gönderildi';
+        setTimeout(() => {
+          btn.textContent = originalBtnText;
+          btn.disabled = false;
+        }, 4000);
+      }
+
+      // Supabase'e arka plan yedekleme
+      saveMessageToSupabaseBackup({ fullName, email, projectType, notes });
+      return;
+    }
+
+    throw new Error(result.message || 'Sunucu yanıt vermedi.');
+
+  } catch (err) {
+    console.warn('FormSubmit AJAX gönderimi başarısız oldu, alternatif yöntem deneniyor:', err);
+
+    // Fallback: Standart HTML post ile formsubmit'e yolla
+    try {
+      if (form && typeof form.submit === 'function') {
+        form.submit();
+        return;
+      }
+    } catch (submitErr) {
+      // Mailto son çare
+    }
+
+    const subject = encodeURIComponent(`ZiftStudio İletişim: ${fullName} (${projectType})`);
+    const body = encodeURIComponent(
+      `Ad Soyad: ${fullName}\nE-posta: ${email}\nProje Türü: ${projectType}\nMesaj:\n${notes}\n`
+    );
+    const mailto = `mailto:muhammedalikitir.tr@gmail.com?subject=${subject}&body=${body}`;
+
+    if (statusEl) {
+      statusEl.className = 'form-status-alert error';
+      statusEl.innerHTML = `
+        <span>⚠️</span>
+        <div>
+          Otomatik gönderim sağlanamadı. 
+          <a href="${mailto}" style="color: inherit; text-decoration: underline; font-weight: 700;">Buraya tıklayarak e-posta uygulamanızla gönderin</a> 
+          veya WhatsApp üzerinden bize ulaşın.
+        </div>
+      `;
+      statusEl.style.display = 'flex';
+    }
+
     if (btn) {
-      btn.textContent = 'Mesaj Gönder →';
+      btn.textContent = originalBtnText;
       btn.disabled = false;
     }
-  }, 350);
+  }
+}
+
+// Supabase İletişim Mesajı Yedekleme
+async function saveMessageToSupabaseBackup(data) {
+  try {
+    if (typeof getSupabaseClient === 'function') {
+      const client = getSupabaseClient();
+      if (client) {
+        await client.from('messages').insert([{
+          full_name: data.fullName,
+          email: data.email,
+          project_type: data.projectType,
+          message: data.notes
+        }]);
+      }
+    }
+  } catch (e) {
+    // Arka plan yedekleme hatası kullanıcıyı etkilemez
+  }
 }
 
 // Cookie Consent Overlay System
@@ -519,25 +623,21 @@ function initScrollReveals() {
   });
 }
 
-// Expandable Blog posts vertical read more & Category Filter
+// Blog posts read more -> Detay sayfasına yönlendirme
 function initBlogExpansion() {
   const expandBtns = document.querySelectorAll('.read-more-btn');
   expandBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
+    // Eğer buton zaten <a> linkiyse varsayılan sayfa geçişini koru
+    if (btn.tagName === 'A' && btn.getAttribute('href')) {
+      return;
+    }
+    // Buton ise ilgili slug ile doğrudan blog-detay.html sayfasına yönlendir
+    btn.addEventListener('click', (e) => {
       const card = btn.closest('.article-card');
-      const content = card.querySelector('.article-content');
-      
-      if (content.classList.contains('expanded')) {
-        content.classList.remove('expanded');
-        btn.innerHTML = 'Devamını Oku <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 9l-7 7-7-7"/></svg>';
-        // Smooth scroll back to card top so user does not get lost
-        window.scrollTo({
-          top: card.offsetTop - 100,
-          behavior: 'smooth'
-        });
-      } else {
-        content.classList.add('expanded');
-        btn.innerHTML = 'Daralt / Kapat <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 15l7-7 7 7"/></svg>';
+      const slug = btn.dataset.slug || card?.getAttribute('data-slug');
+      if (slug) {
+        e.preventDefault();
+        window.location.href = `blog-detay.html?slug=${encodeURIComponent(slug)}`;
       }
     });
   });
@@ -768,13 +868,29 @@ function updateQrLightbox() {
   const current = g.slides[qrGalleryState.currentIndex];
   if (!current) return;
 
+  const lightbox = document.getElementById('qrLightboxOverlay');
   const imgEl = document.getElementById('qrLightboxImg');
   const titleEl = document.getElementById('qrLightboxTitle');
   const counterEl = document.getElementById('qrLightboxCounter');
 
   if (imgEl) imgEl.src = current.src;
-  if (titleEl) titleEl.innerText = current.caption;
+  if (titleEl) titleEl.innerText = current.caption || 'Görsel';
   if (counterEl) counterEl.innerText = `${qrGalleryState.currentIndex + 1} / ${g.slides.length}`;
+
+  // Sağ ve sol yön oklarının görünürlüğü (1'den fazla görsel varsa oklar açık)
+  if (lightbox) {
+    const prevBtn = lightbox.querySelector('.qr-lightbox-arrow.prev');
+    const nextBtn = lightbox.querySelector('.qr-lightbox-arrow.next');
+    if (prevBtn && nextBtn) {
+      if (g.slides.length <= 1) {
+        prevBtn.style.display = 'none';
+        nextBtn.style.display = 'none';
+      } else {
+        prevBtn.style.display = 'flex';
+        nextBtn.style.display = 'flex';
+      }
+    }
+  }
 }
 
 function navQrLightbox(dir, event) {
@@ -799,7 +915,13 @@ function closeQrLightbox(event) {
   if (lightbox) lightbox.classList.remove('open');
 }
 
-// Blog Post Lightbox Initialization
+// Global scope bağlantısı
+window.openQrLightbox = openQrLightbox;
+window.navQrLightbox = navQrLightbox;
+window.closeQrLightbox = closeQrLightbox;
+window.qrGalleryState = qrGalleryState;
+
+// Blog Post Lightbox Initialization (Tüm Makale ve İçerik Görselleri)
 function initBlogLightbox() {
   const articleCards = document.querySelectorAll('.article-card');
   if (!articleCards.length) return;
@@ -808,38 +930,44 @@ function initBlogLightbox() {
     const galleryId = `blog-post-${cardIdx}`;
     const slides = [];
 
-    // 1. Cover image
+    // 1. Kapak görseli
     const coverWrap = card.querySelector('.article-cover-wrap');
     if (coverWrap) {
       const coverImg = coverWrap.querySelector('img');
-      const captionText = coverWrap.querySelector('.article-cover-caption span')?.innerText || coverImg?.alt || 'Proje Görseli';
+      const captionText = coverWrap.querySelector('.article-cover-caption span')?.innerText || coverImg?.alt || 'Kapak Görseli';
       if (coverImg && coverImg.src) {
         slides.push({
           src: coverImg.src,
           caption: captionText
         });
         const slideIdx = slides.length - 1;
+        coverWrap.style.cursor = 'zoom-in';
         coverWrap.addEventListener('click', (e) => {
+          if (e.target.tagName === 'A') return;
           openQrLightbox(galleryId, slideIdx, e);
         });
       }
     }
 
-    // 2. Gallery images inside the post
-    const galleryItems = card.querySelectorAll('.article-gallery-item');
-    galleryItems.forEach(item => {
-      const img = item.querySelector('img');
-      const labelText = item.querySelector('.article-gallery-label')?.innerText || img?.alt || 'Ekran Görüntüsü';
-      if (img && img.src) {
-        slides.push({
-          src: img.src,
-          caption: labelText
-        });
-        const slideIdx = slides.length - 1;
-        item.addEventListener('click', (e) => {
-          openQrLightbox(galleryId, slideIdx, e);
-        });
-      }
+    // 2. Makale içindeki TÜM içerik ve galeri görselleri
+    const contentImages = card.querySelectorAll('.article-content img');
+    contentImages.forEach(img => {
+      if (!img.src) return;
+      if (slides.some(s => s.src === img.src)) return;
+
+      const galleryItem = img.closest('.article-gallery-item');
+      const labelText = galleryItem?.querySelector('.article-gallery-label')?.innerText || img.alt || img.getAttribute('title') || 'Makale Görseli';
+
+      slides.push({
+        src: img.src,
+        caption: labelText
+      });
+      const slideIdx = slides.length - 1;
+      img.style.cursor = 'zoom-in';
+      const clickTarget = galleryItem || img;
+      clickTarget.addEventListener('click', (e) => {
+        openQrLightbox(galleryId, slideIdx, e);
+      });
     });
 
     if (slides.length) {

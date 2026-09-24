@@ -916,7 +916,13 @@
           </div>
 
           <div class="contact-form-wrap">
-            <form id="contactForm" class="contact-form" onsubmit="handleSubmit(event)">
+            <form id="contactForm" class="contact-form" action="https://formsubmit.co/muhammedalikitir.tr@gmail.com" method="POST" onsubmit="handleSubmit(event)">
+              <!-- FormSubmit Yapılandırma Parametreleri -->
+              <input type="hidden" name="_captcha" value="false">
+              <input type="hidden" name="_template" value="table">
+              <input type="hidden" name="_subject" id="formSubmitSubject" value="ZiftStudio Web Sitesinden Yeni Müşteri Mesajı">
+              <input type="text" name="_honey" style="display:none" tabindex="-1" autocomplete="off">
+
               <div class="form-row">
                 <div class="form-group">
                   <label for="fullName" data-lang-tr="Ad Soyad" data-lang-en="Full Name">Ad Soyad</label>
@@ -943,6 +949,10 @@
                 <label for="message" data-lang-tr="Mesajınız" data-lang-en="Your Message">Mesajınız</label>
                 <textarea id="message" name="message" placeholder="Projeniz veya ihtiyaçlarınız hakkında kısaca bilgi verin..." required></textarea>
               </div>
+
+              <!-- Durum ve Başarı Bildirim Alanı -->
+              <div id="contactFormStatus" class="form-status-alert" style="display: none;"></div>
+
               <button type="submit" class="form-submit" id="submitBtn" data-lang-tr="Mesaj Gönder →" data-lang-en="Send Message →">Mesaj Gönder →</button>
             </form>
           </div>
@@ -1038,7 +1048,11 @@
     </div>
   </div>
 
+  <!-- Supabase JS Client & Blog Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="JS/script.js" defer></script>
+  <script src="JS/supabase.js" defer></script>
+  <script src="JS/blog-list.js" defer></script>
 </body>
 
 </html>
